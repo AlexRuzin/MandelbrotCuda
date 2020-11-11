@@ -13,7 +13,7 @@
 
 uint32_t main()
 {
-    mandelbrotFractal mFrac(34, WINDOW_LENGTH, WINDOW_HEIGHT);
+    mandelbrotFractalCpu mFrac(34, WINDOW_LENGTH, WINDOW_HEIGHT);
     std::vector<std::vector<uint32_t>> *image = mFrac.compute_image();
 
     return 0;

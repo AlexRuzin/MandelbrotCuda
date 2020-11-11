@@ -3,11 +3,14 @@
 #include <stdint.h>
 #include <complex>
 #include <vector>
+//#include <unistd.h>
 
 #define X_WINDOW_OFFSET 1.5
 #define Y_WINDOW_OFFSET 0.5
 
-class mandelbrotFractal {
+#define COLOR_GRADIENT 255
+
+class mandelbrotFractalCpu {
 private:
 	uint32_t iterations;
 	float xWindowLength, yWindowLength;
@@ -24,7 +27,13 @@ private:
 			z = z * z + point;
 			iter++;
 		}
-		return iter;
+		
+		if (iter < iterations) {
+			return COLOR_GRADIENT * iter / (iterations - 1);
+		}
+		else {
+			return 0;
+		}
 	}
 
 public:
@@ -43,14 +52,35 @@ public:
 	}
 
 public:
-	mandelbrotFractal(uint32_t iterations, float xLength, float yLength) :
+	mandelbrotFractalCpu(uint32_t iterations, float xLength, float yLength) :
 		iterations(iterations),
 		xWindowLength(xLength), yWindowLength(yLength)
 	{
 
 	}
 
-	~mandelbrotFractal()
+	~mandelbrotFractalCpu()
+	{
+
+	}
+};
+
+class writePPMFile {
+private: 
+	std::string filename;
+	uint32_t length, height;
+
+	std::vector<std::vector<uint32_t>> data;
+
+public:
+	writePPMFile(std::string filename, uint32_t length, uint32_t height) :
+		filename(filename),
+		length(length), height(height)
+	{
+
+	}
+
+	~writePPMFile()
 	{
 
 	}
