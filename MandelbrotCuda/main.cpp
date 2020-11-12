@@ -23,9 +23,9 @@ int main()
 
 #if defined(TEST_MANDELBROT_CPU)
     mandelbrotFractalCpu mFrac(34, WINDOW_LENGTH, WINDOW_HEIGHT);
-    std::vector<std::vector<uint32_t>> *image = mFrac.compute_image();
-    writePPMFile ppm(PPM_OUTPUT_FILE, *image);
-    error_t err = ppm.write_file();
+    std::vector<ppm::ppm_pixel> *image = mFrac.compute_image_ppm();
+    ppm::writePPMFile ppmFile(PPM_OUTPUT_FILE, *image, WINDOW_LENGTH, WINDOW_HEIGHT);
+    error_t err = ppmFile.write_file();
     if (err != 0) {
         return err;
     }

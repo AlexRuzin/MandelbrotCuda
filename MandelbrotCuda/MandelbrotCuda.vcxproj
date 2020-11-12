@@ -80,6 +80,7 @@
     <CudaCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="frame.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="mandelbrot_cpu.h" />
     <ClInclude Include="ppm.h" />

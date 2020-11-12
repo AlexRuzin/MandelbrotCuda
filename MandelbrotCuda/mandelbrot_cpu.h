@@ -1,6 +1,7 @@
 #pragma once
 
 #include "main.h"
+#include "ppm.h"
 
 #include <stdint.h>
 #include <complex>
@@ -40,15 +41,14 @@ private:
 	}
 
 public:
-	std::vector<std::vector<uint32_t>>* compute_image()
+	std::vector<ppm::ppm_pixel> *compute_image_ppm()
 	{
-		std::vector<std::vector<uint32_t>>* o = new std::vector<std::vector<uint32_t>>;
+		std::vector<ppm::ppm_pixel> *o = new std::vector<ppm::ppm_pixel>();
 		for (uint32_t y = 0; y < yWindowLength; y++) {
-			std::vector<uint32_t> line;
 			for (uint32_t x = 0; x < xWindowLength; x++) {
-				line.push_back(compute_point(x, y));
+				o->push_back({x, y, compute_point(x, y)});
 			}
-			o->push_back(line);
+			
 		}
 
 		return o;
