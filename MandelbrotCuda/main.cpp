@@ -42,6 +42,9 @@ int main()
     if (err != 0) {
         return err;
     }
+    if (frameBuf.write_to_file(PPM_OUTPUT_FILE) != 0) {
+        return -1;
+    }
 #endif //TEST_MANDELBROT_CPU_FRAME
 
 #if defined(TEST_MANDELBROT_CPU_PPM)
