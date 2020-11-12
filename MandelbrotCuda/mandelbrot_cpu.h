@@ -2,6 +2,7 @@
 
 #include "main.h"
 #include "ppm.h"
+#include "frame.h"
 
 #include <stdint.h>
 #include <complex>
@@ -47,11 +48,21 @@ public:
 		for (uint32_t y = 0; y < yWindowLength; y++) {
 			for (uint32_t x = 0; x < xWindowLength; x++) {
 				o->push_back({x, y, compute_point(x, y)});
-			}
-			
+			}			
 		}
 
 		return o;
+	}
+
+	error_t compute_image_frame(__inout frame::image *frameBuffer)
+	{
+		for (uint32_t y = 0; y < yWindowLength; y++) {
+			for (uint32_t x = 0; x < xWindowLength; x++) {
+				frameBuffer->insert_pixel(compute_point(x, y), 0, 0);
+			}
+		}
+
+		return 0;
 	}
 
 public:
