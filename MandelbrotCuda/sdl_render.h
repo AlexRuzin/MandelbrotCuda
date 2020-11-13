@@ -4,24 +4,33 @@
 
 #include <stdint.h>
 #include <assert.h>
+#include <vector>
+#include <mutex>
 
 #include "main.h"
+#include "frame.h"
+
+#define COLOR_WHITE frame::rgbPixel{ 255, 255, 255 }
 
 namespace render
 {
 	class sdlBase {
 	private:
-		const uint32_t windowHeight, windowLength;
+		const uint32_t windowHeight, windowWidth;
 		const std::string windowTitle;
 
 		SDL_Window *window;
 		SDL_Renderer *renderer;
 
+		// Frame buffer
+		std::vector<frame::rgbPixel> frameBuffer;
+		std::mutex frameBufferLock;
+
 	public:
 		error_t init_window(void)
 		{
 			window = SDL_CreateWindow(windowTitle.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-				windowLength, windowHeight, 0);
+				windowWidth, windowHeight, 0);
 			if (window == nullptr) {
 				return -1;
 			}
@@ -34,12 +43,32 @@ namespace render
 			return 0;
 		}
 
+		error_t create_render_loop(void)
+		{
+
+			return 0;
+		}
+
+		// Input operator
+		void operator<<(const std::vector<frame::rgbPixel>& d)
+		{
+			frameBufferLock.lock();
+			frameBuffer = d;
+			frameBufferLock.unlock();
+		}
+
 	public:
-		sdlBase(uint32_t height, uint32_t length, std::string windowTitle) :
-			windowHeight(height), windowLength(length), windowTitle(windowTitle),
+		sdlBase(uint32_t height, uint32_t width, std::string windowTitle) :
+			windowHeight(height), windowWidth(width), windowTitle(windowTitle),
 			window(nullptr), renderer(nullptr)
 		{
 			assert(SDL_Init(SDL_INIT_VIDEO) == 0);
+
+			// Initialize frame buffer with WHITE color
+			frameBuffer.resize(height * width);
+			for (uint32_t i = 0; i < (height * width); ++i) {
+				frameBuffer.push_back(COLOR_WHITE);
+			}
 		}
 
 		~sdlBase()
