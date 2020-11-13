@@ -20,9 +20,9 @@ namespace cuda {
 		const uint32_t image_size;
 		const uint32_t image_width, image_height;
 		const double scale;
-		frame::image* image;
+		frame::image *image;
 
-		frame::rgbPixel* pixelData;
+		frame::rgbPixel *pixelData;
 
 	public:
 		error_t generate_mandelbrot(void);
