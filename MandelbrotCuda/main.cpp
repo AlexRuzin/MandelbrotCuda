@@ -2,6 +2,7 @@
 #include "mandelbrot_cpu.h"
 #include "ppm.h"
 #include "cudaMandelbrot.h"
+#include "sdl_render.h"
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
