@@ -1,3 +1,5 @@
+#include "windows.h"
+
 #include "main.h"
 #include "mandelbrot_cpu.h"
 #include "ppm.h"
@@ -24,11 +26,15 @@
 
 #define WINDOW_HEIGHT 10000
 #define WINDOW_LENGTH 10000
+#define WINDOW_NAME "v0.1"
 
 #define FRACTAL_OFFSET_X -0.6
 #define FRACTAL_OFFSET_Y 0.0
 
-int main()
+int WINAPI WinMain(HINSTANCE hinstance,
+    HINSTANCE hprevinstance,
+    LPSTR lpcmdline,
+    int ncmdshow)
 {
 #if defined(TEST_MANDELBROT_CPU_PPM)
     mandelbrotFractalCpu mFrac(34, WINDOW_LENGTH, WINDOW_HEIGHT);
@@ -64,6 +70,11 @@ int main()
 
     if (frameBuf.write_to_file(PPM_OUTPUT_FILE) != 0) {
         return 0;
+    }
+
+    render::sdlBase renderer(WINDOW_HEIGHT, WINDOW_LENGTH, WINDOW_NAME);
+    if (renderer.init_window() != 0) {
+        return -1;
     }
 #endif //TEST_MANDELBROT_CPU
 
