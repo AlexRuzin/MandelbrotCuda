@@ -58,6 +58,10 @@ int main()
     if (kernel.generate_mandelbrot() != 0) {
         return -1;
     }
+
+    if (frameBuf.write_to_file(PPM_OUTPUT_FILE) != 0) {
+        return 0;
+    }
 #endif //TEST_MANDELBROT_CPU
 
 

@@ -160,7 +160,7 @@ error_t cudaKernel::generate_mandelbrot(void)
 		return err;
 	}
 
-	cudaMemcpy(image->get_data(), pixelData, image_size, cudaMemcpyDeviceToHost);
+	cudaMemcpy(&image->data[0], pixelData, image_size, cudaMemcpyDeviceToHost);
 	cudaFree(pixelData);
 
 	return 0;

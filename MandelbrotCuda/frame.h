@@ -21,6 +21,7 @@ namespace frame
 	private: 
 		uint32_t width, height;
 
+	public:
 		std::vector<rgbPixel> data;
 
 	public:
@@ -38,11 +39,6 @@ namespace frame
 		uint32_t get_height() const 
 		{
 			return this->height;
-		}
-
-		std::vector<rgbPixel>* get_data()
-		{
-			return &data;
 		}
 
 		void insert_pixel(uint8_t r, uint8_t g, uint8_t b)
