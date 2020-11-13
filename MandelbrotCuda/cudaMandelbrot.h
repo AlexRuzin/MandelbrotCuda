@@ -34,7 +34,7 @@ namespace cuda {
 	public:
 		cudaKernel(frame::image* image, double cx, double cy) :
 			cx(cx), cy(cy),
-			image_size(image->get_height()* image->get_width() * sizeof(frame::rgbPixel)),
+			image_size(image->get_height() * image->get_width() * sizeof(frame::rgbPixel)),
 			scale(IMAGE_SCALEA / (image->get_width() / IMAGE_SCALEB)),
 			image_width(image->get_width()), image_height(image->get_height()),
 			image(image)

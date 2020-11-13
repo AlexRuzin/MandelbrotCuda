@@ -83,11 +83,12 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 		threadBlocks = 32;
 	}
 
+	threadBlocks = 8;
+
 	int blockSize;
 	std::uint32_t minGridSize;
 	cudaOccupancyMaxPotentialBlockSize((int*)&minGridSize, &blockSize, kernel, 0, 0);
-
-	/*/
+	
 	int maxActiveBlocks = 0;
 	do
 	{
@@ -99,8 +100,7 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 		}
 
 		blockSize -= props.warpSize;
-	} while (true);
-	*/
+	} while (true);	
 
 	int blockSizeDimX, blockSizeDimY;
 	blockSizeDimX = blockSizeDimY = (int)pow(2, ceil(log(sqrt(blockSize)) / log(2)));
@@ -115,7 +115,7 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 	grid.x = grid.x > minGridSize ? grid.x : minGridSize;
 	grid.y = grid.y > minGridSize ? grid.y : minGridSize;
 
-#undef _DEBUG
+#define _DEBUG
 #ifdef _DEBUG
 	float occupancy = (maxActiveBlocks * blockSize / props.warpSize) / (float)(props.maxThreadsPerMultiProcessor / props.warpSize);
 

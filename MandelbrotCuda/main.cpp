@@ -21,11 +21,11 @@
 
 #define PPM_OUTPUT_FILE "output.ppm"
 
-#define WINDOW_HEIGHT 4096
-#define WINDOW_LENGTH 4096
+#define WINDOW_HEIGHT 10000
+#define WINDOW_LENGTH 10000
 
-#define CX -0.6
-#define CY 0.0
+#define FRACTAL_OFFSET_X -0.6
+#define FRACTAL_OFFSET_Y 0.0
 
 int main()
 {
@@ -54,10 +54,12 @@ int main()
 
 #if defined(TEST_MANDELBROT_CPU)
     frame::image frameBuf(WINDOW_LENGTH, WINDOW_HEIGHT);
-    cuda::cudaKernel kernel(&frameBuf, CX, CY);
+    cuda::cudaKernel kernel(&frameBuf, FRACTAL_OFFSET_X, FRACTAL_OFFSET_Y);
     if (kernel.generate_mandelbrot() != 0) {
         return -1;
     }
+
+    uint32_t dataChecksum = frameBuf.get_checksum();
 
     if (frameBuf.write_to_file(PPM_OUTPUT_FILE) != 0) {
         return 0;

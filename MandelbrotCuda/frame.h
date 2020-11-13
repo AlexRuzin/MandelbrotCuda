@@ -68,6 +68,15 @@ namespace frame
 			return 0;
 		}
 
+		uint32_t get_checksum(void) const
+		{
+			std::uint32_t seed = data.size();
+			for (auto& i : data) {
+				seed ^= (i.blue + i.red + i.green) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+			}
+			return seed;
+		}
+
 		friend std::ostream& operator<<(std::ostream& output, const image& d)
 		{
 			output << "P6" << std::endl
