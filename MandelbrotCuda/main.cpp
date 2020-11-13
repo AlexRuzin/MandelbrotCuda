@@ -1,4 +1,3 @@
-
 #include "main.h"
 #include "mandelbrot_cpu.h"
 #include "ppm.h"
@@ -14,17 +13,21 @@
 #undef TEST_MANDELBROT_CPU_PPM
 
 // Tests the frame:: class to write data into a file
-#define TEST_MANDELBROT_CPU_FRAME
+#undef TEST_MANDELBROT_CPU_FRAME
+
+// Tests the mandelbrot GPU renderer
+#define TEST_MANDELBROT_CPU
 
 #define PPM_OUTPUT_FILE "output.ppm"
 
 #define WINDOW_HEIGHT 4096
 #define WINDOW_LENGTH 4096
 
+#define CX -0.6
+#define CY 0.0
+
 int main()
 {
-    DEBUG_INFO("Starting...");
-
 #if defined(TEST_MANDELBROT_CPU_PPM)
     mandelbrotFractalCpu mFrac(34, WINDOW_LENGTH, WINDOW_HEIGHT);
     std::vector<ppm::ppm_pixel> *image = mFrac.compute_image_ppm();
@@ -46,6 +49,12 @@ int main()
         return -1;
     }
 #endif //TEST_MANDELBROT_CPU_FRAME
+
+
+#if defined(TEST_MANDELBROT_CPU)
+
+#endif //TEST_MANDELBROT_CPU
+
 
 #if defined(TEST_MANDELBROT_CPU_PPM)
     delete image;

@@ -30,6 +30,21 @@ namespace frame
 			data.resize(width * height);
 		}
 
+		uint32_t get_width() const
+		{
+			return this->width;
+		}
+
+		uint32_t get_height() const 
+		{
+			return this->height;
+		}
+
+		std::vector<rgbPixel>* get_data()
+		{
+			return &data;
+		}
+
 		void insert_pixel(uint8_t r, uint8_t g, uint8_t b)
 		{
 			data.push_back({ r, g, b });
