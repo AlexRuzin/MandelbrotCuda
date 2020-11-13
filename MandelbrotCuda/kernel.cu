@@ -1,4 +1,4 @@
-#pragma once
+#include "cudaMandelbrot.h"
 
 #include "frame.h"
 
@@ -6,10 +6,9 @@
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
-#define IMAGE_SCALEA 1.0
-#define IMAGE_SCALEB 4.0
+float elapsedTime = 0;
 
-#define USE_CUDA_PERFORMANCE_METRICS
+using namespace cuda;
 
 __constant__ frame::rgbPixel pixel_colour[16] =
 {
@@ -62,132 +61,107 @@ __global__ void mandelbrot_kernel(frame::rgbPixel* image,
 	}
 }
 
-float elapsedTime = 0;
-
-namespace cuda
+template<class T, typename... A>
+error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 {
-	class cudaKernel {
-	private:
-		double cx, cy;
-		const uint32_t image_size;
-		const uint32_t image_width, image_height;
-		const double scale;
-		frame::image *image;
+	int device;
+	cudaDeviceProp props;
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
 
-		frame::rgbPixel *pixelData;
+	int threadBlocks;
+	if (props.major == 2)
+	{
+		threadBlocks = 8;
+	}
+	else if (props.major == 3)
+	{
+		threadBlocks = 16;
+	}
+	else
+	{
+		threadBlocks = 32;
+	}
 
-		template<class T, typename... A>
-		error_t launch_kernel(T& kernel, dim3 work, A&&... args)
+	int blockSize;
+	std::uint32_t minGridSize;
+	cudaOccupancyMaxPotentialBlockSize((int*)&minGridSize, &blockSize, kernel, 0, 0);
+
+	/*/
+	int maxActiveBlocks = 0;
+	do
+	{
+		cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, kernel, blockSize, 0);
+
+		if (blockSize < props.warpSize || maxActiveBlocks >= threadBlocks)
 		{
-			int device;
-			cudaDeviceProp props;
-			cudaGetDevice(&device);
-			cudaGetDeviceProperties(&props, device);
+			break;
+		}
 
-			int threadBlocks;
-			if (props.major == 2)
-			{
-				threadBlocks = 8;
-			}
-			else if (props.major == 3)
-			{
-				threadBlocks = 16;
-			}
-			else
-			{
-				threadBlocks = 32;
-			}
+		blockSize -= props.warpSize;
+	} while (true);
+	*/
 
-			int blockSize;
-			std::uint32_t minGridSize;
-			cudaOccupancyMaxPotentialBlockSize((int*)&minGridSize, &blockSize, kernel, 0, 0);
+	int blockSizeDimX, blockSizeDimY;
+	blockSizeDimX = blockSizeDimY = (int)pow(2, ceil(log(sqrt(blockSize)) / log(2)));
 
-			int maxActiveBlocks = 0;
-			do
-			{
-				cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, kernel, blockSize, 0);
+	while (blockSizeDimX * blockSizeDimY > blockSize)
+	{
+		blockSizeDimY--;
+	}
 
-				if (blockSize < props.warpSize || maxActiveBlocks >= threadBlocks)
-				{
-					break;
-				}
+	dim3 block(blockSizeDimX, blockSizeDimY);
+	dim3 grid((work.x + block.x - 1) / block.x, (work.y + block.y - 1) / block.y);
+	grid.x = grid.x > minGridSize ? grid.x : minGridSize;
+	grid.y = grid.y > minGridSize ? grid.y : minGridSize;
 
-				blockSize -= props.warpSize;
-			} while (true);
-
-			int blockSizeDimX, blockSizeDimY;
-			blockSizeDimX = blockSizeDimY = (int)pow(2, ceil(log(sqrt(blockSize)) / log(2)));
-
-			while (blockSizeDimX * blockSizeDimY > blockSize)
-			{
-				blockSizeDimY--;
-			}
-
-			dim3 block(blockSizeDimX, blockSizeDimY);
-			dim3 grid((work.x + block.x - 1) / block.x, (work.y + block.y - 1) / block.y);
-			grid.x = grid.x > minGridSize ? grid.x : minGridSize;
-			grid.y = grid.y > minGridSize ? grid.y : minGridSize;
-
-			//#undef _DEBUG
+#undef _DEBUG
 #ifdef _DEBUG
-			float occupancy = (maxActiveBlocks * blockSize / props.warpSize) / (float)(props.maxThreadsPerMultiProcessor / props.warpSize);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize) / (float)(props.maxThreadsPerMultiProcessor / props.warpSize);
 
-			std::cout << "Grid of size " << grid.x * grid.y << std::endl;
-			std::cout << "Launched blocks of size " << blockSize << std::endl;
-			std::cout << "Theoretical occupancy " << occupancy * 100.0f << "%" << std::endl;
+	std::cout << "Grid of size " << grid.x * grid.y << std::endl;
+	std::cout << "Launched blocks of size " << blockSize << std::endl;
+	std::cout << "Theoretical occupancy " << occupancy * 100.0f << "%" << std::endl;
 #endif
 
-			cudaEvent_t start;
-			cudaEventCreate(&start);
+	cudaEvent_t start;
+	cudaEventCreate(&start);
 
-			cudaEvent_t stop;
-			cudaEventCreate(&stop);
+	cudaEvent_t stop;
+	cudaEventCreate(&stop);
 
-			cudaEventRecord(start, 0);
+	cudaEventRecord(start, 0);
 
-			kernel << < grid, block >> > (std::forward<A>(args)...);
+	kernel << < grid, block >> > (std::forward<A>(args)...);
 
-			cudaGetLastError();
-			cudaEventRecord(stop, 0);
-			cudaEventSynchronize(stop);
+	cudaGetLastError();
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
 
-			cudaEventElapsedTime(&elapsedTime, start, stop);
+	cudaEventElapsedTime(&elapsedTime, start, stop);
 
-			cudaEventDestroy(start);
-			cudaEventDestroy(stop);
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
 
-			cudaProfilerStop();
+	cudaProfilerStop();
 
-			return 0;
-		}
+	return 0;
+}
 
-	public:
-		cudaKernel(frame::image *image, double cx, double cy) :
-			cx(cx), cy(cy),
-			image_size(image->get_height() * image->get_width() * sizeof(frame::rgbPixel)),
-			scale(IMAGE_SCALEA / (image->get_width() / IMAGE_SCALEB)),
-			image_width(image->get_width()), image_height(image->get_height()),
-			image(image)
-		{
+error_t cudaKernel::generate_mandelbrot(void)
+{
+	cudaMalloc((void**)&this->pixelData, image_size);
+	cudaMemset(pixelData, 0, image_size);
 
-		}
+	error_t err = launch_kernel(mandelbrot_kernel,
+		dim3(image_width, image_height), pixelData,
+		image_width, image_height, scale, cx, cy);
+	if (err != 0) {
+		return err;
+	}
 
-		error_t generate_mandelbrot(void)
-		{
-			cudaMalloc((void**)&this->pixelData, image_size);
-			cudaMemset(pixelData, 0, image_size);
+	cudaMemcpy(image->get_data(), pixelData, image_size, cudaMemcpyDeviceToHost);
+	cudaFree(pixelData);
 
-			error_t err = launch_kernel(mandelbrot_kernel,
-				dim3(image_width, image_height), pixelData,
-				image_width, image_height, scale, cx, cy);
-			if (err != 0) {
-				return err;
-			}
-
-			cudaMemcpy(image->get_data(), pixelData, image_size, cudaMemcpyDeviceToHost);
-			cudaFree(pixelData);
-
-			return 0;
-		}
-	};
+	return 0;
 }

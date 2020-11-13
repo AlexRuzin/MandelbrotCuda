@@ -1,6 +1,7 @@
 #include "main.h"
 #include "mandelbrot_cpu.h"
 #include "ppm.h"
+#include "cudaMandelbrot.h"
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -52,7 +53,11 @@ int main()
 
 
 #if defined(TEST_MANDELBROT_CPU)
-
+    frame::image frameBuf(WINDOW_LENGTH, WINDOW_HEIGHT);
+    cuda::cudaKernel kernel(&frameBuf, CX, CY);
+    if (kernel.generate_mandelbrot() != 0) {
+        return -1;
+    }
 #endif //TEST_MANDELBROT_CPU
 
 
