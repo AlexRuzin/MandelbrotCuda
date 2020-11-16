@@ -82,6 +82,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cudaMandelbrot.h" />
+    <ClInclude Include="debug.h" />
     <ClInclude Include="frame.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="mandelbrot_cpu.h" />

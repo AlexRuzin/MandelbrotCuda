@@ -1,7 +1,10 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
+#include <iostream>
 #include <stdint.h>
 #include <assert.h>
 #include <vector>
@@ -11,6 +14,7 @@
 
 #include "main.h"
 #include "frame.h"
+#include "debug.h"
 
 /*
  * Configuration for SDL2 rendering engine
@@ -28,6 +32,7 @@ namespace render
 	class sdlTimer;
 	class sdlBase;
 
+#if defined(RENDER_ENABLE_FPS_CAP)
 	//https://lazyfoo.net/tutorials/SDL/23_advanced_timers/index.php
 	class sdlTimer {
 	private:
@@ -44,7 +49,9 @@ namespace render
 
 		~sdlTimer(void)
 		{
-
+			if (mStarted || mPaused) {
+				this->pause();
+			}
 		}
 
 		void start(void)
@@ -96,8 +103,102 @@ namespace render
 			return time;
 		}
 
+		void reset(void)
+		{
+			mStarted = mPaused = false;
+			mStarted = mPausedTicks = 0;
+		}
+
 		bool isStarted(void) const { return mStarted; }
 		bool isPaused(void) const { return mPaused; }
+	};
+#endif //RENDER_ENABLE_FPS_CAP
+
+	class LTexture {
+	private:
+		SDL_Texture *mTexture;
+		SDL_Renderer *mainRenderer;
+		TTF_Font *font;
+
+		int mWidth;
+		int mHeight;
+
+	public:
+		LTexture(__inout SDL_Renderer *renderEngine) :
+			mTexture(nullptr), mWidth(0), mHeight(0),
+			mainRenderer(renderEngine)
+		{
+
+		}
+
+		~LTexture()
+		{
+			free();
+		}
+
+		error_t loadFromFile(std::string path)
+		{
+			assert(mainRenderer != nullptr);
+
+			free();
+
+			SDL_Texture *newTexture = nullptr;
+			SDL_Surface *loadedSurface = IMG_Load(path.c_str());
+			if (loadedSurface == nullptr) {
+				return -1;
+			}
+
+			SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xff, 0xff));
+			newTexture = SDL_CreateTextureFromSurface(mainRenderer, loadedSurface);
+			if (newTexture == nullptr) {
+				return -1;
+			}
+
+			mWidth = loadedSurface->w;
+			mHeight = loadedSurface->h;
+
+			SDL_FreeSurface(loadedSurface);
+
+			mTexture = newTexture;
+			return 0;
+		}
+
+		error_t LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor)
+		{
+			free();
+
+			SDL_Surface* textSurface = TTF_RenderText_Solid(font, textureText.c_str(), textColor);
+			if (textSurface == nullptr) {
+				return -1;
+			}
+
+			mTexture = SDL_CreateTextureFromSurface(mainRenderer, textSurface);
+			if (mTexture == NULL)
+			{
+				return -1;
+			}
+
+			mWidth = textSurface->w;
+			mHeight = textSurface->h;
+
+			SDL_FreeSurface(textSurface);
+
+			return 0;
+		}
+
+		void free()
+		{
+			if (mTexture != nullptr) {
+				SDL_DestroyTexture(mTexture);
+				mTexture = nullptr;
+				mHeight = mWidth = 0;
+			}
+		}
+
+		void render(int x, int y);
+
+		int getWidth();
+		int getHeight();
 	};
 
 	class sdlBase {
@@ -118,9 +219,11 @@ namespace render
 
 		// Frame counter
 	private:
+#if defined(RENDER_ENABLE_FPS_CAP)
 		sdlTimer fpsTimer;
 		sdlTimer capTimer;
 		uint64_t frameCount;
+#endif //RENDER_ENABLE_FPS_CAP
 
 	private:
 		static friend void render_loop(sdlBase* b)
@@ -130,11 +233,33 @@ namespace render
 			SDL_Event e;
 			SDL_Color textColor = { 0, 0, 0, 255 };
 
+#if defined(RENDER_ENABLE_FPS_CAP)
 			b->fpsTimer.start();
+			uint32_t countedFrames = 0;
+			std::stringstream timeText;
+			LTexture texture(b->renderer);
+#endif //RENDER_ENABLE_FPS_CAP
 
 			while (b->doRender) {
-				
+				float avgFPS = countedFrames / (b->fpsTimer.getTicks() / 1000.f);
+				if (avgFPS > 2000000)
+				{
+					avgFPS = 0;
+				}
+
+				timeText.str("");
+				timeText << "Average Frames Per Second (With Cap) " << avgFPS;
+
+				if (!texture.loadFromRenderedText(timeText.str().c_str(), textColor))
+				{
+					
+					break;
+				}
 			}
+
+#if defined(RENDER_ENABLE_FPS_CAP)
+			b->fpsTimer.pause();
+#endif
 
 			return;
 		}
@@ -161,7 +286,9 @@ namespace render
 			assert(!doRender && renderThread == nullptr);
 
 			doRender = true;
-			this->renderThread = new std::thread(this);
+			this->renderThread = new std::thread(render_loop, this);
+
+			DINFO("Created rendering loop");
 
 			return 0;
 		}
@@ -206,6 +333,4 @@ namespace render
 			SDL_Quit();
 		}
 	};
-
-
 }

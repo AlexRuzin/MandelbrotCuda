@@ -5,6 +5,7 @@
 #include "ppm.h"
 #include "cudaMandelbrot.h"
 #include "sdl_render.h"
+#include "debug.h"
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -31,11 +32,17 @@
 #define FRACTAL_OFFSET_X -0.6
 #define FRACTAL_OFFSET_Y 0.0
 
+#define DEBUG_LOG_FILE "debug.log"
+
 int WINAPI WinMain(HINSTANCE hinstance,
     HINSTANCE hprevinstance,
     LPSTR lpcmdline,
     int ncmdshow)
 {
+    const std::string* debugLogFile = new std::string(DEBUG_LOG_FILE);
+    debug::init_debug(debugLogFile, DEBUG_FLAG_STDOUT | DEBUG_FLAG_LOGFILE | DEBUG_FLAG_CLEANLOGFILE);  
+    DINFO("Starting application");
+
 #if defined(TEST_MANDELBROT_CPU_PPM)
     mandelbrotFractalCpu mFrac(34, WINDOW_LENGTH, WINDOW_HEIGHT);
     std::vector<ppm::ppm_pixel> *image = mFrac.compute_image_ppm();
@@ -66,7 +73,7 @@ int WINAPI WinMain(HINSTANCE hinstance,
         return -1;
     }
 
-    uint32_t dataChecksum = frameBuf.get_checksum();
+    size_t dataChecksum = frameBuf.get_checksum();
 
     if (frameBuf.write_to_file(PPM_OUTPUT_FILE) != 0) {
         return 0;
