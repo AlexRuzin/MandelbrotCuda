@@ -26,6 +26,7 @@
 #if defined(RENDER_ENABLE_FPS_CAP) 
 #define RENDER_FPS_CAP						60
 #define RENDER_SCREEN_TICKS_PER_FRAME		1000 / RENDER_FPS_CAP
+#define RENDER_SHOW_FPS_STRING
 #endif //RENDER_ENABLE_FPS_CAP
 
 #define COLOR_WHITE frame::rgbPixel{ 255, 255, 255 }
@@ -140,6 +141,11 @@ namespace render
 		~LTexture()
 		{
 			free();
+
+			if (font != nullptr) {
+				TTF_CloseFont(font);
+				font = nullptr;
+			}
 		}
 
 	private:
@@ -257,7 +263,7 @@ namespace render
 		std::thread *renderThread;
 
 		// Framer renderer lock mutex
-		std::mutex waitForRendererEnd;
+		std::mutex *waitForRendererEnd;
 
 		// Frame counter
 	private:
@@ -271,21 +277,26 @@ namespace render
 		static friend void render_loop(sdlBase* b)
 		{
 			assert(b->window != nullptr && b->renderer != nullptr);
+			DINFO("Starting SDL2 renderer loop thread");
 
-			SDL_Event e;
-			SDL_Color textColor = { 0, 0, 0, 255 };
+			SDL_Event sdlEvent = {0};
 
 #if defined(RENDER_ENABLE_FPS_CAP)
+			SDL_Color textColor = { 0, 0, 0, 255 };
 			b->fpsTimer.start();
 			uint32_t countedFrames = 0;
 			std::stringstream timeText;
 			LTexture texture(b->renderer);
 #endif //RENDER_ENABLE_FPS_CAP
 
+			b->waitForRendererEnd->lock();
+
 			/*
 			 * Primary rendering loop
 			 */
 			while (b->doRender) {
+
+#if defined(RENDER_ENABLE_FPS_CAP)
 				float avgFPS = countedFrames / (b->fpsTimer.getTicks() / 1000.f);
 				if (avgFPS > 2000000)
 				{
@@ -300,35 +311,60 @@ namespace render
 					DERROR("render_loop: Failed to load rendered text");
 					break;
 				}
+#endif //RENDER_ENABLE_FPS_CAP
 
-				SDL_Event sdlEvent;
-				SDL_PollEvent(&sdlEvent);
-				switch (sdlEvent.type) {
-				case SDL_QUIT:
-					DINFO("Renderer has received SDL_QUIT signal");
-					b->doRender = false;
-					break;
+				while (SDL_PollEvent(&sdlEvent) != 0) {
+					switch (sdlEvent.type) {
+						DINFO("Event triggered");
+					case SDL_QUIT:
+						DINFO("Renderer has received SDL_QUIT signal");
+						b->doRender = false;
+						break;
+					case SDL_KEYDOWN:
+						DINFO("Keystroke detected");
+						switch (sdlEvent.key.keysym.sym) {
+						case SDLK_ESCAPE:
+							DINFO("Renderer has received user input quit signal");
+							b->doRender = false;
+							break;
+						}
+						break;
+					case SDL_WINDOWEVENT:
+						switch (sdlEvent.window.event) {
+						case SDL_WINDOWEVENT_CLOSE:
+							DINFO("Renderer exiting");
+							b->doRender = false;
+							break;
+						}
+						break;
+					}
 				}
 
 				SDL_SetRenderDrawColor(b->renderer, 0xff, 0xff, 0xff, 0xff);
 				SDL_RenderClear(b->renderer);
 
+#if defined(RENDER_ENABLE_FPS_CAP)
+#if defined(RENDER_SHOW_FPS_STRING)
 				//texture.render((b->windowWidth - texture.getWidth()) / 2, (b->windowHeight - texture.getHeight()) / 2);
-				texture.render(0, 0);
+				texture.render(0, 0); 
+				countedFrames++;
+#endif //RENDER_SHOW_FPS_STRING
+#endif //RENDER_ENABLE_FPS_CAP
 
 				SDL_RenderPresent(b->renderer);
-				countedFrames++;
 
+#if defined(RENDER_ENABLE_FPS_CAP)
 				uint32_t frameTicks = b->capTimer.getTicks();
 				if (frameTicks < RENDER_SCREEN_TICKS_PER_FRAME) {
 					SDL_Delay(RENDER_SCREEN_TICKS_PER_FRAME - frameTicks);
 				}
+#endif //RENDER_ENABLE_FPS_CAP
 			}
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 			b->fpsTimer.pause();
 #endif
-			b->waitForRendererEnd.unlock();
+			b->waitForRendererEnd->unlock();
 			return;
 		}
 
@@ -354,9 +390,8 @@ namespace render
 			assert(!doRender && renderThread == nullptr);
 
 			doRender = true;
-			//waitForRendererEnd.unlock();
-			waitForRendererEnd.lock();
 			this->renderThread = new std::thread(render_loop, this);
+			debug::sleep(100);
 
 			DINFO("Created rendering loop");
 
@@ -365,7 +400,7 @@ namespace render
 
 		void wait_for_render_exit(void) 
 		{
-			waitForRendererEnd.lock();
+			waitForRendererEnd->lock();
 		}
 
 		void kill_render_loop(void)
@@ -385,7 +420,11 @@ namespace render
 		sdlBase(uint32_t height, uint32_t width, std::string windowTitle) :
 			windowHeight(height), windowWidth(width), windowTitle(windowTitle),
 			window(nullptr), renderer(nullptr),
-			doRender(false), renderThread(nullptr), frameCount(0)
+			doRender(false), renderThread(nullptr), 			
+#if defined(RENDER_ENABLE_FPS_CAP)
+			frameCount(0),
+#endif //RENDER_ENABLE_FPS_CAP
+			waitForRendererEnd(new std::mutex())
 		{
 			assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
 			assert(TTF_Init() == 0);
@@ -410,3 +449,5 @@ namespace render
 		}
 	};
 }
+
+//EOF

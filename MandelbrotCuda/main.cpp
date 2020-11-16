@@ -1,4 +1,4 @@
-#define _WIN32
+//#define _WIN32
 #if defined(_WIN32)
 #include "windows.h"
 #endif //__WIN32
@@ -104,6 +104,7 @@ int WINAPI WinMain(HINSTANCE hinstance,
 #if defined(TEST_MANDELBROT_CPU_PPM)
     delete image;
 #endif //TEST_MANDELBROT_CPU_PPM
+    DINFO("Clean exit");
     return 0;
 }
 
