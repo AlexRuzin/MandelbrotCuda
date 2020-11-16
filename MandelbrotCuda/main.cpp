@@ -1,4 +1,5 @@
 #include "windows.h"
+#define __WIN32
 
 #include "main.h"
 #include "mandelbrot_cpu.h"
@@ -40,7 +41,7 @@ int WINAPI WinMain(HINSTANCE hinstance,
     int ncmdshow)
 {
     const std::string* debugLogFile = new std::string(DEBUG_LOG_FILE);
-    debug::init_debug(debugLogFile, DEBUG_FLAG_STDOUT | DEBUG_FLAG_LOGFILE | DEBUG_FLAG_CLEANLOGFILE);  
+    debug::init_debug(debugLogFile, DEBUG_FLAG_STDOUT | DEBUG_FLAG_LOGFILE | DEBUG_FLAG_CLEANLOGFILE | DEBUG_FLAG_TIMESTAMP);  
     DINFO("Starting application");
 
 #if defined(TEST_MANDELBROT_CPU_PPM)

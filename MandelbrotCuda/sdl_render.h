@@ -252,7 +252,7 @@ namespace render
 
 				if (!texture.loadFromRenderedText(timeText.str().c_str(), textColor))
 				{
-					
+					DERROR("render_loop: Failed to load rendered text");
 					break;
 				}
 			}
