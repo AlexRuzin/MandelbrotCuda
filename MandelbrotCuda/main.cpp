@@ -1,5 +1,7 @@
+#define _WIN32
+#if defined(_WIN32)
 #include "windows.h"
-#define __WIN32
+#endif //__WIN32
 
 #include "main.h"
 #include "mandelbrot_cpu.h"
@@ -26,14 +28,17 @@
 
 #define PPM_OUTPUT_FILE "output.ppm"
 
-#define WINDOW_HEIGHT 10000
-#define WINDOW_LENGTH 10000
-#define WINDOW_NAME "v0.1"
+#define FRAME_BUFFER_HEIGHT     4096 //10000
+#define FRAME_BUFFER_LENGTH     4096 //10000
+#define WINDOW_NAME             "v0.1"
 
-#define FRACTAL_OFFSET_X -0.6
-#define FRACTAL_OFFSET_Y 0.0
+#define RENDER_WINDOW_HEIGHT    1024
+#define RENDER_WINDOW_LENGTH    2048
 
-#define DEBUG_LOG_FILE "debug.log"
+#define FRACTAL_OFFSET_X        -0.6
+#define FRACTAL_OFFSET_Y        0.0
+
+#define DEBUG_LOG_FILE          "debug.log"
 
 int WINAPI WinMain(HINSTANCE hinstance,
     HINSTANCE hprevinstance,
@@ -68,22 +73,31 @@ int WINAPI WinMain(HINSTANCE hinstance,
 
 
 #if defined(TEST_MANDELBROT_CPU)
-    frame::image frameBuf(WINDOW_LENGTH, WINDOW_HEIGHT);
+    frame::image frameBuf(FRAME_BUFFER_LENGTH, FRAME_BUFFER_HEIGHT);
     cuda::cudaKernel kernel(&frameBuf, FRACTAL_OFFSET_X, FRACTAL_OFFSET_Y);
     if (kernel.generate_mandelbrot() != 0) {
         return -1;
     }
 
     size_t dataChecksum = frameBuf.get_checksum();
-
+    DINFO("Writing file to: " PPM_OUTPUT_FILE);
     if (frameBuf.write_to_file(PPM_OUTPUT_FILE) != 0) {
+        DERROR("Failed to write file: " PPM_OUTPUT_FILE);
         return 0;
     }
 
-    render::sdlBase renderer(WINDOW_HEIGHT, WINDOW_LENGTH, WINDOW_NAME);
+    render::sdlBase renderer(RENDER_WINDOW_HEIGHT, RENDER_WINDOW_LENGTH, WINDOW_NAME);
     if (renderer.init_window() != 0) {
+        DERROR("Failed to create sdlBase renderer");
         return -1;
     }
+
+    if (renderer.create_render_loop() != 0) {
+        DERROR("Failed to create rendering loop");
+        return -1;
+    }
+    DINFO("Main thread waiting for renderer exit signal");
+    renderer.wait_for_render_exit();
 #endif //TEST_MANDELBROT_CPU
 
 

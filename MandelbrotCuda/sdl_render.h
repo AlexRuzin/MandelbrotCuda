@@ -16,6 +16,9 @@
 #include "frame.h"
 #include "debug.h"
 
+#define FPS_COUNTER_FONT_TYPE		"C:\\Windows\\Fonts\\Arial.ttf"
+#define FPS_COUNTER_FONT_SIZE		28
+
 /*
  * Configuration for SDL2 rendering engine
  */
@@ -126,9 +129,12 @@ namespace render
 	public:
 		LTexture(__inout SDL_Renderer *renderEngine) :
 			mTexture(nullptr), mWidth(0), mHeight(0),
-			mainRenderer(renderEngine)
+			mainRenderer(renderEngine), font(nullptr)
 		{
-
+			// Load default font type
+			if (setFontType(FPS_COUNTER_FONT_TYPE, FPS_COUNTER_FONT_SIZE) != 0) {
+				DERROR("Failed to load texture");
+			}
 		}
 
 		~LTexture()
@@ -136,6 +142,35 @@ namespace render
 			free();
 		}
 
+	private:
+		error_t setFontType(const std::string& name, int size)
+		{
+			if (font != nullptr)
+			{
+				TTF_CloseFont(font);
+				font = nullptr;
+			}
+
+			std::ifstream f(name.c_str());
+			if (!f.good()) {
+				DWARNING("Font file does not exist: " + name);
+			}
+
+			font = TTF_OpenFont(name.c_str(), size);
+			if (font == nullptr) {
+				DERROR("Failed to load TTF: " + name + " SDL ERROR: " + TTF_GetError());
+				return -1;
+			}
+
+			if (font == nullptr)
+			{
+				DERROR("Failed to load font! SDL_ttf Error");
+			}
+
+			return 0;
+		}
+
+	public:
 		error_t loadFromFile(std::string path)
 		{
 			assert(mainRenderer != nullptr);
@@ -195,10 +230,14 @@ namespace render
 			}
 		}
 
-		void render(int x, int y);
+		void render(int x, int y)
+		{
+			SDL_Rect renderQuad = { x, y, mWidth, mHeight };
+			SDL_RenderCopy(mainRenderer, mTexture, NULL, &renderQuad);
+		}
 
-		int getWidth();
-		int getHeight();
+		int getWidth() const { return mWidth; }
+		int getHeight() const { return mHeight; }
 	};
 
 	class sdlBase {
@@ -216,6 +255,9 @@ namespace render
 		// Render loop flag
 		bool doRender;
 		std::thread *renderThread;
+
+		// Framer renderer lock mutex
+		std::mutex waitForRendererEnd;
 
 		// Frame counter
 	private:
@@ -240,6 +282,9 @@ namespace render
 			LTexture texture(b->renderer);
 #endif //RENDER_ENABLE_FPS_CAP
 
+			/*
+			 * Primary rendering loop
+			 */
 			while (b->doRender) {
 				float avgFPS = countedFrames / (b->fpsTimer.getTicks() / 1000.f);
 				if (avgFPS > 2000000)
@@ -248,19 +293,42 @@ namespace render
 				}
 
 				timeText.str("");
-				timeText << "Average Frames Per Second (With Cap) " << avgFPS;
+				timeText << "FPS Limit: " << RENDER_FPS_CAP << " Average: " << avgFPS;
 
-				if (!texture.loadFromRenderedText(timeText.str().c_str(), textColor))
+				if (texture.loadFromRenderedText(timeText.str().c_str(), textColor))
 				{
 					DERROR("render_loop: Failed to load rendered text");
 					break;
+				}
+
+				SDL_Event sdlEvent;
+				SDL_PollEvent(&sdlEvent);
+				switch (sdlEvent.type) {
+				case SDL_QUIT:
+					DINFO("Renderer has received SDL_QUIT signal");
+					b->doRender = false;
+					break;
+				}
+
+				SDL_SetRenderDrawColor(b->renderer, 0xff, 0xff, 0xff, 0xff);
+				SDL_RenderClear(b->renderer);
+
+				//texture.render((b->windowWidth - texture.getWidth()) / 2, (b->windowHeight - texture.getHeight()) / 2);
+				texture.render(0, 0);
+
+				SDL_RenderPresent(b->renderer);
+				countedFrames++;
+
+				uint32_t frameTicks = b->capTimer.getTicks();
+				if (frameTicks < RENDER_SCREEN_TICKS_PER_FRAME) {
+					SDL_Delay(RENDER_SCREEN_TICKS_PER_FRAME - frameTicks);
 				}
 			}
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 			b->fpsTimer.pause();
 #endif
-
+			b->waitForRendererEnd.unlock();
 			return;
 		}
 
@@ -286,11 +354,18 @@ namespace render
 			assert(!doRender && renderThread == nullptr);
 
 			doRender = true;
+			//waitForRendererEnd.unlock();
+			waitForRendererEnd.lock();
 			this->renderThread = new std::thread(render_loop, this);
 
 			DINFO("Created rendering loop");
 
 			return 0;
+		}
+
+		void wait_for_render_exit(void) 
+		{
+			waitForRendererEnd.lock();
 		}
 
 		void kill_render_loop(void)
@@ -312,7 +387,8 @@ namespace render
 			window(nullptr), renderer(nullptr),
 			doRender(false), renderThread(nullptr), frameCount(0)
 		{
-			assert(SDL_Init(SDL_INIT_VIDEO) == 0);
+			assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
+			assert(TTF_Init() == 0);
 
 			// Initialize frame buffer with WHITE color
 			frameBuffer.resize(height * width);
