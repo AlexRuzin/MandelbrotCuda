@@ -295,7 +295,6 @@ namespace render
 			 * Primary rendering loop
 			 */
 			while (b->doRender) {
-
 #if defined(RENDER_ENABLE_FPS_CAP)
 				float avgFPS = countedFrames / (b->fpsTimer.getTicks() / 1000.f);
 				if (avgFPS > 2000000)
@@ -314,8 +313,8 @@ namespace render
 #endif //RENDER_ENABLE_FPS_CAP
 
 				while (SDL_PollEvent(&sdlEvent) != 0) {
+					DINFO("Event triggered");
 					switch (sdlEvent.type) {
-						DINFO("Event triggered");
 					case SDL_QUIT:
 						DINFO("Renderer has received SDL_QUIT signal");
 						b->doRender = false;
@@ -337,6 +336,8 @@ namespace render
 							break;
 						}
 						break;
+					default:
+						DWARNING("Unknown EVENT from SDL2 poll function");
 					}
 				}
 
@@ -372,7 +373,8 @@ namespace render
 		error_t init_window(void)
 		{
 			window = SDL_CreateWindow(windowTitle.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-				windowWidth, windowHeight, 0);
+				windowWidth, windowHeight, 
+				SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 			if (window == nullptr) {
 				return -1;
 			}
@@ -426,7 +428,7 @@ namespace render
 #endif //RENDER_ENABLE_FPS_CAP
 			waitForRendererEnd(new std::mutex())
 		{
-			assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
+			assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == 0);
 			assert(TTF_Init() == 0);
 
 			// Initialize frame buffer with WHITE color
