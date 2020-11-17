@@ -279,8 +279,6 @@ namespace render
 			assert(b->window != nullptr && b->renderer != nullptr);
 			DINFO("Starting SDL2 renderer loop thread");
 
-			SDL_Event sdlEvent = {0};
-
 #if defined(RENDER_ENABLE_FPS_CAP)
 			SDL_Color textColor = { 0, 0, 0, 255 };
 			b->fpsTimer.start();
@@ -312,6 +310,7 @@ namespace render
 				}
 #endif //RENDER_ENABLE_FPS_CAP
 
+				SDL_Event sdlEvent;
 				while (SDL_PollEvent(&sdlEvent) != 0) {
 					DINFO("Event triggered");
 					switch (sdlEvent.type) {
@@ -334,7 +333,19 @@ namespace render
 							DINFO("Renderer exiting");
 							b->doRender = false;
 							break;
+						case SDL_WINDOWEVENT_MINIMIZED:
+							DINFO("SDL_WINDOWEVENT_MAXIMIZED");
+							break;
+						case SDL_WINDOWEVENT_MAXIMIZED:
+							DINFO("SDL_WINDOWEVENT_MAXIMIZED");
+							break;
+						case SDL_WINDOWEVENT_ENTER:
+							DINFO("SDL_WINDOWEVENT_ENTER");
+							break;
+						default:
+							DINFO("Unknown SDL_WINDOWEVENT");
 						}
+					
 						break;
 					default:
 						DWARNING("Unknown EVENT from SDL2 poll function");
@@ -359,6 +370,8 @@ namespace render
 				if (frameTicks < RENDER_SCREEN_TICKS_PER_FRAME) {
 					SDL_Delay(RENDER_SCREEN_TICKS_PER_FRAME - frameTicks);
 				}
+#else
+				SDL_Delay(10);
 #endif //RENDER_ENABLE_FPS_CAP
 			}
 
@@ -393,7 +406,7 @@ namespace render
 
 			doRender = true;
 			this->renderThread = new std::thread(render_loop, this);
-			debug::sleep(100);
+			debug::sleep(1000);
 
 			DINFO("Created rendering loop");
 
