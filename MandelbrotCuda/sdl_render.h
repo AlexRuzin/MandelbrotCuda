@@ -35,6 +35,7 @@ namespace render
 {
 	class sdlTimer;
 	class sdlBase;
+	void render_loop(sdlBase* b);
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 	//https://lazyfoo.net/tutorials/SDL/23_advanced_timers/index.php
@@ -120,15 +121,15 @@ namespace render
 
 	class LTexture {
 	private:
-		SDL_Texture *mTexture;
-		SDL_Renderer *mainRenderer;
-		TTF_Font *font;
+		SDL_Texture* mTexture;
+		SDL_Renderer* mainRenderer;
+		TTF_Font* font;
 
 		int mWidth;
 		int mHeight;
 
 	public:
-		LTexture(__inout SDL_Renderer *renderEngine) :
+		LTexture(__inout SDL_Renderer* renderEngine) :
 			mTexture(nullptr), mWidth(0), mHeight(0),
 			mainRenderer(renderEngine), font(nullptr)
 		{
@@ -183,8 +184,8 @@ namespace render
 
 			free();
 
-			SDL_Texture *newTexture = nullptr;
-			SDL_Surface *loadedSurface = IMG_Load(path.c_str());
+			SDL_Texture* newTexture = nullptr;
+			SDL_Surface* loadedSurface = IMG_Load(path.c_str());
 			if (loadedSurface == nullptr) {
 				return -1;
 			}
@@ -247,12 +248,12 @@ namespace render
 	};
 
 	class sdlBase {
-	private:
+	public:
 		const uint32_t windowHeight, windowWidth;
 		const std::string windowTitle;
 
-		SDL_Window *window;
-		SDL_Renderer *renderer;
+		SDL_Window* window;
+		SDL_Renderer* renderer;
 
 		// Frame buffer
 		std::vector<frame::rgbPixel> frameBuffer;
@@ -260,133 +261,24 @@ namespace render
 
 		// Render loop flag
 		bool doRender;
-		std::thread *renderThread;
+		std::thread* renderThread;
 
 		// Framer renderer lock mutex
-		std::mutex *waitForRendererEnd;
+		std::mutex* waitForRendererEnd;
 
 		// Frame counter
-	private:
+	public:
 #if defined(RENDER_ENABLE_FPS_CAP)
 		sdlTimer fpsTimer;
 		sdlTimer capTimer;
 		uint64_t frameCount;
 #endif //RENDER_ENABLE_FPS_CAP
 
-	private:
-		static friend void render_loop(sdlBase* b)
-		{
-			assert(b->window != nullptr && b->renderer != nullptr);
-			DINFO("Starting SDL2 renderer loop thread");
-
-#if defined(RENDER_ENABLE_FPS_CAP)
-			SDL_Color textColor = { 0, 0, 0, 255 };
-			b->fpsTimer.start();
-			uint32_t countedFrames = 0;
-			std::stringstream timeText;
-			LTexture texture(b->renderer);
-#endif //RENDER_ENABLE_FPS_CAP
-
-			b->waitForRendererEnd->lock();
-
-			/*
-			 * Primary rendering loop
-			 */
-			while (b->doRender) {
-#if defined(RENDER_ENABLE_FPS_CAP)
-				float avgFPS = countedFrames / (b->fpsTimer.getTicks() / 1000.f);
-				if (avgFPS > 2000000)
-				{
-					avgFPS = 0;
-				}
-
-				timeText.str("");
-				timeText << "FPS Limit: " << RENDER_FPS_CAP << " Average: " << avgFPS;
-
-				if (texture.loadFromRenderedText(timeText.str().c_str(), textColor))
-				{
-					DERROR("render_loop: Failed to load rendered text");
-					break;
-				}
-#endif //RENDER_ENABLE_FPS_CAP
-
-				SDL_Event sdlEvent;
-				while (SDL_PollEvent(&sdlEvent) != 0) {
-					DINFO("Event triggered");
-					switch (sdlEvent.type) {
-					case SDL_QUIT:
-						DINFO("Renderer has received SDL_QUIT signal");
-						b->doRender = false;
-						break;
-					case SDL_KEYDOWN:
-						DINFO("Keystroke detected");
-						switch (sdlEvent.key.keysym.sym) {
-						case SDLK_ESCAPE:
-							DINFO("Renderer has received user input quit signal");
-							b->doRender = false;
-							break;
-						}
-						break;
-					case SDL_WINDOWEVENT:
-						switch (sdlEvent.window.event) {
-						case SDL_WINDOWEVENT_CLOSE:
-							DINFO("Renderer exiting");
-							b->doRender = false;
-							break;
-						case SDL_WINDOWEVENT_MINIMIZED:
-							DINFO("SDL_WINDOWEVENT_MAXIMIZED");
-							break;
-						case SDL_WINDOWEVENT_MAXIMIZED:
-							DINFO("SDL_WINDOWEVENT_MAXIMIZED");
-							break;
-						case SDL_WINDOWEVENT_ENTER:
-							DINFO("SDL_WINDOWEVENT_ENTER");
-							break;
-						default:
-							DINFO("Unknown SDL_WINDOWEVENT");
-						}
-					
-						break;
-					default:
-						DWARNING("Unknown EVENT from SDL2 poll function");
-					}
-				}
-
-				SDL_SetRenderDrawColor(b->renderer, 0xff, 0xff, 0xff, 0xff);
-				SDL_RenderClear(b->renderer);
-
-#if defined(RENDER_ENABLE_FPS_CAP)
-#if defined(RENDER_SHOW_FPS_STRING)
-				//texture.render((b->windowWidth - texture.getWidth()) / 2, (b->windowHeight - texture.getHeight()) / 2);
-				texture.render(0, 0); 
-				countedFrames++;
-#endif //RENDER_SHOW_FPS_STRING
-#endif //RENDER_ENABLE_FPS_CAP
-
-				SDL_RenderPresent(b->renderer);
-
-#if defined(RENDER_ENABLE_FPS_CAP)
-				uint32_t frameTicks = b->capTimer.getTicks();
-				if (frameTicks < RENDER_SCREEN_TICKS_PER_FRAME) {
-					SDL_Delay(RENDER_SCREEN_TICKS_PER_FRAME - frameTicks);
-				}
-#else
-				SDL_Delay(10);
-#endif //RENDER_ENABLE_FPS_CAP
-			}
-
-#if defined(RENDER_ENABLE_FPS_CAP)
-			b->fpsTimer.pause();
-#endif
-			b->waitForRendererEnd->unlock();
-			return;
-		}
-
 	public:
 		error_t init_window(void)
 		{
 			window = SDL_CreateWindow(windowTitle.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-				windowWidth, windowHeight, 
+				windowWidth, windowHeight,
 				SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
 			if (window == nullptr) {
 				return -1;
@@ -413,7 +305,7 @@ namespace render
 			return 0;
 		}
 
-		void wait_for_render_exit(void) 
+		void wait_for_render_exit(void)
 		{
 			waitForRendererEnd->lock();
 		}
@@ -435,7 +327,7 @@ namespace render
 		sdlBase(uint32_t height, uint32_t width, std::string windowTitle) :
 			windowHeight(height), windowWidth(width), windowTitle(windowTitle),
 			window(nullptr), renderer(nullptr),
-			doRender(false), renderThread(nullptr), 			
+			doRender(false), renderThread(nullptr),
 #if defined(RENDER_ENABLE_FPS_CAP)
 			frameCount(0),
 #endif //RENDER_ENABLE_FPS_CAP
@@ -463,6 +355,114 @@ namespace render
 			SDL_Quit();
 		}
 	};
+
+	void render_loop(sdlBase* b)
+	{
+		assert(b->window != nullptr && b->renderer != nullptr);
+		DINFO("Starting SDL2 renderer loop thread");
+
+#if defined(RENDER_ENABLE_FPS_CAP)
+		SDL_Color textColor = { 0, 0, 0, 255 };
+		b->fpsTimer.start();
+		uint32_t countedFrames = 0;
+		std::stringstream timeText;
+		LTexture texture(b->renderer);
+#endif //RENDER_ENABLE_FPS_CAP
+
+		b->waitForRendererEnd->lock();
+
+		/*
+		 * Primary rendering loop
+		 */
+		while (b->doRender) {
+#if defined(RENDER_ENABLE_FPS_CAP)
+			float avgFPS = countedFrames / (b->fpsTimer.getTicks() / 1000.f);
+			if (avgFPS > 2000000)
+			{
+				avgFPS = 0;
+			}
+
+			timeText.str("");
+			timeText << "FPS Limit: " << RENDER_FPS_CAP << " Average: " << avgFPS;
+
+			if (texture.loadFromRenderedText(timeText.str().c_str(), textColor))
+			{
+				DERROR("render_loop: Failed to load rendered text");
+				break;
+			}
+#endif //RENDER_ENABLE_FPS_CAP
+
+			SDL_Event sdlEvent;
+			while (SDL_PollEvent(&sdlEvent) != 0) {
+				DINFO("Event triggered");
+				switch (sdlEvent.type) {
+				case SDL_QUIT:
+					DINFO("Renderer has received SDL_QUIT signal");
+					b->doRender = false;
+					break;
+				case SDL_KEYDOWN:
+					DINFO("Keystroke detected");
+					switch (sdlEvent.key.keysym.sym) {
+					case SDLK_ESCAPE:
+						DINFO("Renderer has received user input quit signal");
+						b->doRender = false;
+						break;
+					}
+					break;
+				case SDL_WINDOWEVENT:
+					switch (sdlEvent.window.event) {
+					case SDL_WINDOWEVENT_CLOSE:
+						DINFO("Renderer exiting");
+						b->doRender = false;
+						break;
+					case SDL_WINDOWEVENT_MINIMIZED:
+						DINFO("SDL_WINDOWEVENT_MAXIMIZED");
+						break;
+					case SDL_WINDOWEVENT_MAXIMIZED:
+						DINFO("SDL_WINDOWEVENT_MAXIMIZED");
+						break;
+					case SDL_WINDOWEVENT_ENTER:
+						DINFO("SDL_WINDOWEVENT_ENTER");
+						break;
+					default:
+						DINFO("Unknown SDL_WINDOWEVENT");
+					}
+
+					break;
+				default:
+					DWARNING("Unknown EVENT from SDL2 poll function");
+				}
+			}
+
+			SDL_SetRenderDrawColor(b->renderer, 0xff, 0xff, 0xff, 0xff);
+			SDL_RenderClear(b->renderer);
+
+#if defined(RENDER_ENABLE_FPS_CAP)
+#if defined(RENDER_SHOW_FPS_STRING)
+			//texture.render((b->windowWidth - texture.getWidth()) / 2, (b->windowHeight - texture.getHeight()) / 2);
+			texture.render(0, 0);
+			countedFrames++;
+#endif //RENDER_SHOW_FPS_STRING
+#endif //RENDER_ENABLE_FPS_CAP
+
+			SDL_RenderPresent(b->renderer);
+
+#if defined(RENDER_ENABLE_FPS_CAP)
+			uint32_t frameTicks = b->capTimer.getTicks();
+			if (frameTicks < RENDER_SCREEN_TICKS_PER_FRAME) {
+				SDL_Delay(RENDER_SCREEN_TICKS_PER_FRAME - frameTicks);
+			}
+#else
+			SDL_Delay(10);
+#endif //RENDER_ENABLE_FPS_CAP
+		}
+
+#if defined(RENDER_ENABLE_FPS_CAP)
+		b->fpsTimer.pause();
+#endif
+		b->waitForRendererEnd->unlock();
+		return;
+	}
 }
 
 //EOF
