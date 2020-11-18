@@ -92,19 +92,18 @@ int WINAPI WinMain(HINSTANCE hinstance,
         return -1;
     }
 
-    if (renderer.create_render_loop() != 0) {
-        DERROR("Failed to create rendering loop");
-        return -1;
+    // Enter rendering loop
+    error_t renderErr = renderer.enter_render_loop();
+    if (renderErr != 0) {
+        DERROR("Renderer returned error: " + std::to_string(renderErr));
+        return renderErr;
     }
-    DINFO("Main thread waiting for renderer exit signal");
-    renderer.wait_for_render_exit();
 #endif //TEST_MANDELBROT_CPU
-
 
 #if defined(TEST_MANDELBROT_CPU_PPM)
     delete image;
 #endif //TEST_MANDELBROT_CPU_PPM
-    DINFO("Clean exit");
+    DINFO("Engine halted. Clean exit");
     return 0;
 }
 

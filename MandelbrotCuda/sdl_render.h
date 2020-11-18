@@ -262,9 +262,6 @@ namespace render
 		bool doRender;
 		std::thread *renderThread;
 
-		// Framer renderer lock mutex
-		std::mutex *waitForRendererEnd;
-
 		// Frame counter
 	private:
 #if defined(RENDER_ENABLE_FPS_CAP)
@@ -274,7 +271,7 @@ namespace render
 #endif //RENDER_ENABLE_FPS_CAP
 
 	private:
-		static friend void render_loop(sdlBase* b)
+		error_t render_loop(sdlBase* b)
 		{
 			assert(b->window != nullptr && b->renderer != nullptr);
 			DINFO("Starting SDL2 renderer loop thread");
@@ -286,8 +283,6 @@ namespace render
 			std::stringstream timeText;
 			LTexture texture(b->renderer);
 #endif //RENDER_ENABLE_FPS_CAP
-
-			b->waitForRendererEnd->lock();
 
 			/*
 			 * Primary rendering loop
@@ -312,7 +307,6 @@ namespace render
 
 				SDL_Event sdlEvent;
 				while (SDL_PollEvent(&sdlEvent) != 0) {
-					DINFO("Event triggered");
 					switch (sdlEvent.type) {
 					case SDL_QUIT:
 						DINFO("Renderer has received SDL_QUIT signal");
@@ -348,7 +342,8 @@ namespace render
 					
 						break;
 					default:
-						DWARNING("Unknown EVENT from SDL2 poll function");
+						//DWARNING("Unknown EVENT from SDL2 poll function");
+						break;
 					}
 				}
 
@@ -378,11 +373,16 @@ namespace render
 #if defined(RENDER_ENABLE_FPS_CAP)
 			b->fpsTimer.pause();
 #endif
-			b->waitForRendererEnd->unlock();
-			return;
+			return 0;
 		}
 
 	public:
+		error_t enter_render_loop(void)
+		{
+			this->doRender = true;
+			return render_loop(this);
+		}
+
 		error_t init_window(void)
 		{
 			window = SDL_CreateWindow(windowTitle.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -398,24 +398,6 @@ namespace render
 			}
 
 			return 0;
-		}
-
-		error_t create_render_loop(void)
-		{
-			assert(!doRender && renderThread == nullptr);
-
-			doRender = true;
-			this->renderThread = new std::thread(render_loop, this);
-			debug::sleep(1000);
-
-			DINFO("Created rendering loop");
-
-			return 0;
-		}
-
-		void wait_for_render_exit(void) 
-		{
-			waitForRendererEnd->lock();
 		}
 
 		void kill_render_loop(void)
@@ -437,9 +419,8 @@ namespace render
 			window(nullptr), renderer(nullptr),
 			doRender(false), renderThread(nullptr), 			
 #if defined(RENDER_ENABLE_FPS_CAP)
-			frameCount(0),
+			frameCount(0)
 #endif //RENDER_ENABLE_FPS_CAP
-			waitForRendererEnd(new std::mutex())
 		{
 			assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == 0);
 			assert(TTF_Init() == 0);
