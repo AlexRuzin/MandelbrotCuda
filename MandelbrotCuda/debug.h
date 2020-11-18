@@ -13,6 +13,7 @@
 #include <ctime>
 #include <cstdio>
 #include <stdio.h>
+#include <mutex>
 
 #undef DISABLE_DEBUG_LOGGING
 
@@ -56,6 +57,8 @@ namespace debug
 		const debugFlags flags;
 		const std::string *logFilename;
 
+		std::mutex writeSync;
+
 	public:
 		debugOut(const std::string *filename, debugFlags flags) :
 			logFilename(filename), outfile(nullptr), flags(flags)
@@ -86,6 +89,8 @@ namespace debug
 		void debugPrint(debugLevel level, const std::string s)
 		{		
 			assert(debug.find(level) != debug.end());
+
+			this->writeSync.lock();
 
 #if defined(DISABLE_DEBUG_LOGGING)
 			return;
@@ -122,6 +127,7 @@ namespace debug
 				std::cout << ss << std::endl;
 #endif //_WIN32
 			}
+			this->writeSync.unlock();
 		}
 	};
 
