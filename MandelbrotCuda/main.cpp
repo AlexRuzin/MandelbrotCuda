@@ -28,12 +28,14 @@
 
 #define PPM_OUTPUT_FILE "output.ppm"
 
-#define FRAME_BUFFER_HEIGHT     1024 //10000
-#define FRAME_BUFFER_LENGTH     1024 //10000
+// Defines the resolution of the image
+#define FRAME_BUFFER_HEIGHT     2048 //10000
+#define FRAME_BUFFER_LENGTH     2048 //10000
 #define WINDOW_NAME             "v0.1"
 
+// Defines the size of the render window
 #define RENDER_WINDOW_HEIGHT    1024
-#define RENDER_WINDOW_LENGTH    2048
+#define RENDER_WINDOW_LENGTH    1024
 
 #define FRACTAL_OFFSET_X        -0.6
 #define FRACTAL_OFFSET_Y        0.0
@@ -95,7 +97,7 @@ int WINAPI WinMain(HINSTANCE hinstance,
         return -1;
     }
 
-    renderer.write_static_frame(rawFrameBuffer, 1024, 1024);
+    renderer.write_static_frame(rawFrameBuffer, FRAME_BUFFER_LENGTH, FRAME_BUFFER_HEIGHT);
 
     // Enter rendering loop
     error_t renderErr = renderer.enter_render_loop();

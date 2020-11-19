@@ -2,6 +2,8 @@
 
 #include "main.h"
 
+#include <SDL2/SDL.h>
+
 #include <vector>
 #include <cstdint>
 #include <sstream>
@@ -88,7 +90,7 @@ namespace frame
 				out[bufOffset] = (i->red);
 				out[bufOffset + 1] = (i->green);
 				out[bufOffset + 2] = (i->blue);
-				out[bufOffset + 3] = 0;
+				out[bufOffset + 3] = SDL_ALPHA_OPAQUE;
 			}
 
 			return out;

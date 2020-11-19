@@ -288,8 +288,16 @@ namespace render
 			b->fpsTimer.start();
 			uint32_t countedFrames = 0;
 			std::stringstream timeText;
-			LTexture texture(b->renderer);
+			LTexture fpsTexture(b->renderer);
 #endif //RENDER_ENABLE_FPS_CAP
+
+			SDL_Texture *frameTexture = SDL_CreateTexture
+			(
+				renderer,
+				SDL_PIXELFORMAT_ARGB8888,
+				SDL_TEXTUREACCESS_STREAMING,
+				frameBufferLength, frameBufferHeight
+			);
 
 			/*
 			 * Primary rendering loop
@@ -305,7 +313,7 @@ namespace render
 				timeText.str("");
 				timeText << "FPS Limit: " << RENDER_FPS_CAP << " Average: " << avgFPS;
 
-				if (texture.loadFromRenderedText(timeText.str().c_str(), textColor))
+				if (fpsTexture.loadFromRenderedText(timeText.str().c_str(), textColor))
 				{
 					DERROR("render_loop: Failed to load rendered text");
 					break;
@@ -354,18 +362,40 @@ namespace render
 					}
 				}
 
+				SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+				SDL_RenderClear(renderer);
+
 				// Draw raw frame buffer
 				if (frameBufferRaw.size() != 0) {
+					unsigned char* lockedPixels = nullptr;
+					int pitch = 0;
+					SDL_LockTexture
+					(
+						frameTexture,
+						NULL,
+						reinterpret_cast<void**>(&lockedPixels),
+						&pitch
+					);
+					std::memcpy(lockedPixels, frameBufferRaw.data(), frameBufferRaw.size());
+					SDL_UnlockTexture(frameTexture);
 
+					frameBufferRaw.clear();
 				} else {
-					SDL_SetRenderDrawColor(b->renderer, 0xff, 0xff, 0xff, 0xff);
-					SDL_RenderClear(b->renderer);
+					SDL_UpdateTexture
+					(
+						frameTexture,
+						NULL,
+						frameBufferRaw.data(),
+						frameBufferLength * 4
+					);
 				}
+
+				SDL_RenderCopy(renderer, frameTexture, NULL, NULL);
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 #if defined(RENDER_SHOW_FPS_STRING)
 				//texture.render((b->windowWidth - texture.getWidth()) / 2, (b->windowHeight - texture.getHeight()) / 2);
-				texture.render(0, 0); 
+				fpsTexture.render(0, 0);
 				countedFrames++;
 #endif //RENDER_SHOW_FPS_STRING
 #endif //RENDER_ENABLE_FPS_CAP
