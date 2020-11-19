@@ -254,9 +254,16 @@ namespace render
 		SDL_Window *window;
 		SDL_Renderer *renderer;
 
-		// Frame buffer
-		std::vector<frame::rgbPixel> frameBuffer;
+		// Frame buffer sync 
 		std::mutex frameBufferLock;
+
+		// Frame buffer (PPM image)
+		std::vector<frame::rgbPixel> frameBufferPPM;
+		
+		// Frame buffer (SDL2 texture array)
+		//   Each pixel contains r, g, b, alpha, 8 bits each
+		uint32_t frameBufferLength, frameBufferHeight;
+		std::vector<uint8_t> frameBufferRaw;
 
 		// Render loop flag
 		bool doRender;
@@ -347,8 +354,13 @@ namespace render
 					}
 				}
 
-				SDL_SetRenderDrawColor(b->renderer, 0xff, 0xff, 0xff, 0xff);
-				SDL_RenderClear(b->renderer);
+				// Draw raw frame buffer
+				if (frameBufferRaw.size() != 0) {
+
+				} else {
+					SDL_SetRenderDrawColor(b->renderer, 0xff, 0xff, 0xff, 0xff);
+					SDL_RenderClear(b->renderer);
+				}
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 #if defined(RENDER_SHOW_FPS_STRING)
@@ -377,6 +389,17 @@ namespace render
 		}
 
 	public:
+		// Function for SDL2 raw frame buffer, uses format:
+		//  4 bytes per pixel: r, g, b, alpha
+		void write_static_frame(__in const std::vector<uint8_t> frame, uint32_t length, uint32_t height)
+		{
+			frameBufferLock.lock();
+			frameBufferLength = length;
+			frameBufferHeight = height;
+			frameBufferRaw = frame;
+			frameBufferLock.unlock();
+		}
+
 		error_t enter_render_loop(void)
 		{
 			this->doRender = true;
@@ -409,7 +432,7 @@ namespace render
 		void operator<<(const std::vector<frame::rgbPixel>& d)
 		{
 			frameBufferLock.lock();
-			frameBuffer = d;
+			frameBufferPPM = d;
 			frameBufferLock.unlock();
 		}
 
@@ -426,9 +449,9 @@ namespace render
 			assert(TTF_Init() == 0);
 
 			// Initialize frame buffer with WHITE color
-			frameBuffer.resize(height * width);
+			frameBufferPPM.resize(height * width);
 			for (uint32_t i = 0; i < (height * width); ++i) {
-				frameBuffer.push_back(COLOR_WHITE);
+				frameBufferPPM.push_back(COLOR_WHITE);
 			}
 		}
 

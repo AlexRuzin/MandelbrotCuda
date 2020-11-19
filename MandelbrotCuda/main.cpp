@@ -28,8 +28,8 @@
 
 #define PPM_OUTPUT_FILE "output.ppm"
 
-#define FRAME_BUFFER_HEIGHT     4096 //10000
-#define FRAME_BUFFER_LENGTH     4096 //10000
+#define FRAME_BUFFER_HEIGHT     1024 //10000
+#define FRAME_BUFFER_LENGTH     1024 //10000
 #define WINDOW_NAME             "v0.1"
 
 #define RENDER_WINDOW_HEIGHT    1024
@@ -79,6 +79,9 @@ int WINAPI WinMain(HINSTANCE hinstance,
         return -1;
     }
 
+    const std::vector<uint8_t> rawFrameBuffer = frameBuf.export_raw_frame_buffer();
+    DINFO("Frame buffer pixel count: " + std::to_string(rawFrameBuffer.size()));
+
     size_t dataChecksum = frameBuf.get_checksum();
     DINFO("Writing file to: " PPM_OUTPUT_FILE);
     if (frameBuf.write_to_file(PPM_OUTPUT_FILE) != 0) {
@@ -91,6 +94,8 @@ int WINAPI WinMain(HINSTANCE hinstance,
         DERROR("Failed to create sdlBase renderer");
         return -1;
     }
+
+    renderer.write_static_frame(rawFrameBuffer, 1024, 1024);
 
     // Enter rendering loop
     error_t renderErr = renderer.enter_render_loop();

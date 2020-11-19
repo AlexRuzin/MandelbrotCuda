@@ -77,6 +77,23 @@ namespace frame
 			return seed;
 		}
 
+		// Exports frame buffer in following format:
+		//  Each pixel is 4 bytes: r, g, b, alpha
+		std::vector<uint8_t> export_raw_frame_buffer(void) const
+		{
+			std::vector<uint8_t> out;
+			out.resize(data.size() * (sizeof(uint8_t) * 4));
+			uint32_t bufOffset = 0;
+			for (std::vector<rgbPixel>::const_iterator i = data.begin(); i != data.end(); i++, bufOffset += 4) {
+				out[bufOffset] = (i->red);
+				out[bufOffset + 1] = (i->green);
+				out[bufOffset + 2] = (i->blue);
+				out[bufOffset + 3] = 0;
+			}
+
+			return out;
+		}
+
 		friend std::ostream& operator<<(std::ostream& output, const image& d)
 		{
 			output << "P6" << std::endl
@@ -95,3 +112,5 @@ namespace frame
 		}
 	};
 }
+
+//EOF
