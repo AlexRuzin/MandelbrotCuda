@@ -22,6 +22,8 @@ namespace cuda {
 		const double scale;
 		frame::image *image;
 
+		double scaleA, scaleB;
+
 		frame::rgbPixel *pixelData;
 
 	public:
@@ -32,14 +34,37 @@ namespace cuda {
 		error_t launch_kernel(T& kernel, dim3 work, A&&... args);
 
 	public:
-		cudaKernel(frame::image* image, double cx, double cy) :
+		cudaKernel(frame::image* image, double cx, double cy, double scaleA, double scaleB) :
 			cx(cx), cy(cy),
 			image_size(image->get_height() * image->get_width() * sizeof(frame::rgbPixel)),
 			scale(IMAGE_SCALEA / (image->get_width() / IMAGE_SCALEB)),
 			image_width(image->get_width()), image_height(image->get_height()),
-			image(image)
+			image(image),
+			scaleA(scaleA == 0 ? IMAGE_SCALEA : scaleA), scaleB(scaleB == 0 ? IMAGE_SCALEB : scaleB)
 		{
 
+		}
+
+		~cudaKernel(void)
+		{
+
+		}
+
+		void setScaleA(double a)
+		{
+			scaleA = a;
+		}
+		void setScaleB(double b)
+		{
+			scaleB = b;
+		}
+		void setOffsetX(double x)
+		{
+			cx = x;
+		}
+		void setOffsetY(double y)
+		{
+			cy = y;
 		}
 	};	
 }
