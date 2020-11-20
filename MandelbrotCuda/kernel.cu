@@ -6,6 +6,8 @@
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
+#define CUDA_MANDELBROT_INTERATIONS 32
+
 float elapsedTime = 0;
 
 using namespace cuda;
@@ -19,7 +21,7 @@ __constant__ frame::rgbPixel pixel_colour[16] =
 };
 
 __global__ void mandelbrot_kernel(frame::rgbPixel* image,
-	uint32_t width, uint32_t height,
+	int32_t width, int32_t height,
 	double scale,
 	double cx, double cy)
 {

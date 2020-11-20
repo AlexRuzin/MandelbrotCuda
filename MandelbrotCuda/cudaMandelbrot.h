@@ -8,8 +8,8 @@
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
-#define IMAGE_SCALEA 1.0
-#define IMAGE_SCALEB 4.0
+#define IMAGE_SCALEA 1.0  //1.0
+#define IMAGE_SCALEB 4.0 //4.0
 
 #define USE_CUDA_PERFORMANCE_METRICS
 

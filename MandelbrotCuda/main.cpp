@@ -28,7 +28,7 @@
 
 #define PPM_OUTPUT_FILE "output.ppm"
 
-// Defines the resolution of the image
+// Defines
 #define FRAME_BUFFER_HEIGHT     2048 //10000
 #define FRAME_BUFFER_LENGTH     2048 //10000
 #define WINDOW_NAME             "v0.1"
@@ -37,8 +37,8 @@
 #define RENDER_WINDOW_HEIGHT    1024
 #define RENDER_WINDOW_LENGTH    1024
 
-#define FRACTAL_OFFSET_X        -0.6
-#define FRACTAL_OFFSET_Y        0.0
+#define FRACTAL_OFFSET_X        -0.6  // -0.6
+#define FRACTAL_OFFSET_Y        0.0   // 0.0
 
 #define DEBUG_LOG_FILE          "debug.log"
 
