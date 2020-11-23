@@ -25,6 +25,7 @@ namespace cuda {
 		double scaleA, scaleB;
 
 		frame::rgbPixel *pixelData;
+		unsigned char *rawFrameBuffer;
 
 	public:
 		error_t generate_mandelbrot(void);
@@ -40,7 +41,8 @@ namespace cuda {
 			scale(IMAGE_SCALEA / (image->get_width() / IMAGE_SCALEB)),
 			image_width(image->get_width()), image_height(image->get_height()),
 			image(image),
-			scaleA(scaleA == 0 ? IMAGE_SCALEA : scaleA), scaleB(scaleB == 0 ? IMAGE_SCALEB : scaleB)
+			scaleA(scaleA == 0 ? IMAGE_SCALEA : scaleA), scaleB(scaleB == 0 ? IMAGE_SCALEB : scaleB),
+			rawFrameBuffer(nullptr)
 		{
 
 		}
@@ -48,6 +50,22 @@ namespace cuda {
 		~cudaKernel(void)
 		{
 
+		}
+
+		// Returns the raw frame buffer as r,g,b,a from the 3 byte rgbPixel structure
+		const unsigned char* get_raw_frame(void)
+		{
+			if (rawFrameBuffer != nullptr) {
+				std::free(rawFrameBuffer);
+			}
+			rawFrameBuffer = (unsigned char*)std::malloc(image_size * sizeof(uint8_t) * 4);
+			std::memset(rawFrameBuffer, 0x0, image_size * sizeof(uint8_t) * 4);
+
+			for (uint32_t i = 0; i <= image_size; i++) {
+				rawFrameBuffer[i] = pixelData[i].red;
+				rawFrameBuffer[i + 1] = pixelData[i].green;
+				rawFrameBuffer[i + 2] = pixelData[i].blue;
+			}
 		}
 
 		void setScaleA(double a)
