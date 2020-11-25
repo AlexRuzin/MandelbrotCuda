@@ -248,7 +248,7 @@ namespace render
 
 	class sdlBase {
 	private:
-		const uint32_t windowHeight, windowWidth;
+		const size_t windowHeight, windowWidth;
 		const std::string windowTitle;
 
 		SDL_Window *window;
@@ -262,8 +262,9 @@ namespace render
 		
 		// Frame buffer (SDL2 texture array)
 		//   Each pixel contains r, g, b, alpha, 8 bits each
-		uint32_t frameBufferLength, frameBufferHeight;
-		std::vector<uint8_t> frameBufferRaw;
+		size_t framePixelLength, framePixelHeight, frameTotalPixels;
+		rgbaPixel *frameBuffer;
+		bool refreshBuffer;
 
 		// Render loop flag
 		bool doRender;
@@ -296,7 +297,7 @@ namespace render
 				renderer,
 				SDL_PIXELFORMAT_ARGB8888,
 				SDL_TEXTUREACCESS_STREAMING,
-				frameBufferLength, frameBufferHeight
+				framePixelLength, framePixelHeight
 			);
 
 			/*
@@ -366,7 +367,8 @@ namespace render
 				SDL_RenderClear(renderer);
 
 				// Draw raw frame buffer
-				if (frameBufferRaw.size() != 0) {
+				frameBufferLock.lock();
+				if (refreshBuffer) {
 					unsigned char* lockedPixels = nullptr;
 					int pitch = 0;
 					SDL_LockTexture
@@ -376,20 +378,21 @@ namespace render
 						reinterpret_cast<void**>(&lockedPixels),
 						&pitch
 					);
-					std::memcpy(lockedPixels, frameBufferRaw.data(), frameBufferRaw.size());
+					std::memcpy(lockedPixels, frameBuffer, frameTotalPixels * sizeof(rgbaPixel));
 					SDL_UnlockTexture(frameTexture);
-
-					frameBufferRaw.clear();
-				} else {
+				} 
+				else {
 					SDL_UpdateTexture
 					(
 						frameTexture,
 						NULL,
-						frameBufferRaw.data(),
-						frameBufferLength * 4
+						frameBuffer,
+						frameTotalPixels * sizeof(rgbaPixel)
 					);
 				}
+				frameBufferLock.unlock();
 
+				// Copy frame image into renderer
 				SDL_RenderCopy(renderer, frameTexture, NULL, NULL);
 
 #if defined(RENDER_ENABLE_FPS_CAP)
@@ -421,12 +424,19 @@ namespace render
 	public:
 		// Function for SDL2 raw frame buffer, uses format:
 		//  4 bytes per pixel: r, g, b, alpha
-		void write_static_frame(__in const std::vector<uint8_t> frame, uint32_t length, uint32_t height)
-		{
+		void write_static_frame(__in rgbaPixel *frame, size_t length, size_t height)
+		{			
 			frameBufferLock.lock();
-			frameBufferLength = length;
-			frameBufferHeight = height;
-			frameBufferRaw = frame;
+
+			if (this->frameBuffer != nullptr) {
+				std::free(frameBuffer);
+			}
+
+			framePixelLength = length;
+			framePixelHeight = height;
+			frameTotalPixels = framePixelHeight * framePixelLength * sizeof(rgbaPixel);
+			frameBuffer = frame;
+
 			frameBufferLock.unlock();
 		}
 
@@ -467,10 +477,11 @@ namespace render
 		}
 
 	public:
-		sdlBase(uint32_t height, uint32_t width, std::string windowTitle) :
+		sdlBase(size_t height, size_t width, std::string windowTitle) :
 			windowHeight(height), windowWidth(width), windowTitle(windowTitle),
 			window(nullptr), renderer(nullptr),
-			doRender(false), renderThread(nullptr), 			
+			doRender(false), renderThread(nullptr), 		
+			frameBuffer(nullptr), framePixelHeight(0), framePixelLength(0), refreshBuffer(false),
 #if defined(RENDER_ENABLE_FPS_CAP)
 			frameCount(0)
 #endif //RENDER_ENABLE_FPS_CAP

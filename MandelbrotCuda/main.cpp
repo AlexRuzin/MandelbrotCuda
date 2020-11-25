@@ -24,7 +24,7 @@
 #undef TEST_MANDELBROT_CPU_FRAME
 
 // Tests the mandelbrot GPU renderer
-#define TEST_MANDELBROT_CPU
+#define TEST_MANDELBROT_GPU
 
 #define PPM_OUTPUT_FILE "output.ppm"
 
@@ -74,7 +74,7 @@ int WINAPI WinMain(HINSTANCE hinstance,
 #endif //TEST_MANDELBROT_CPU_FRAME
 
 
-#if defined(TEST_MANDELBROT_CPU)
+#if defined(TEST_MANDELBROT_GPU)
     frame::image frameBuf(FRAME_BUFFER_LENGTH, FRAME_BUFFER_HEIGHT);
     cuda::cudaKernel kernel(&frameBuf, FRACTAL_OFFSET_X, FRACTAL_OFFSET_Y);
     if (kernel.generate_mandelbrot() != 0) {
