@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "frame.h"
+#include "types.h"
 
 #include "cuda_occupancy.h"
 #include "cuda_runtime.h"
@@ -12,6 +12,9 @@
 #define IMAGE_SCALEB 4.0 //4.0
 
 #define USE_CUDA_PERFORMANCE_METRICS
+
+// Debug output for CUDA grid sizes
+#define CUDA_DEBUG_OUT
 
 namespace cuda {
 	class cudaKernel {
@@ -30,7 +33,7 @@ namespace cuda {
 		const double scale;
 
 	public:
-		error_t generate_mandelbrot_ppm(void);
+		error_t generate_mandelbrot(void);
 
 	private:
 		template<class T, typename... A>

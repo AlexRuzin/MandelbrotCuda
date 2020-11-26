@@ -1,6 +1,6 @@
 #pragma once
 
-#include "main.h"
+//#include "main.h"
 
 #include <SDL2/SDL.h>
 

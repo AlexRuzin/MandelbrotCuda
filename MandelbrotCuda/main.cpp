@@ -3,12 +3,17 @@
 #include "windows.h"
 #endif //__WIN32
 
+#undef USE_COMPLEXT_DEBUGGING
+#if !defined(DEBUG_LIBRARY_INCLUDED)
+#include "debug.h"
+#endif //DEBUG_LIBRARY_INCLUDED
+
 #include "main.h"
 #include "mandelbrot_cpu.h"
 #include "ppm.h"
-#include "cudaMandelbrot.h"
-#include "sdl_render.h"
-#include "debug.h"
+#include "controller.h"
+//#include "cudaMandelbrot.h"
+//#include "sdl_render.h"
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -46,9 +51,7 @@ int WINAPI WinMain(HINSTANCE hinstance,
     HINSTANCE hprevinstance,
     LPSTR lpcmdline,
     int ncmdshow)
-{
-    const std::string* debugLogFile = new std::string(DEBUG_LOG_FILE);
-    debug::init_debug(debugLogFile, DEBUG_FLAG_STDOUT | DEBUG_FLAG_LOGFILE | DEBUG_FLAG_CLEANLOGFILE | DEBUG_FLAG_TIMESTAMP);  
+{ 
     DINFO("Starting application");
 
 #if defined(TEST_MANDELBROT_CPU_PPM)

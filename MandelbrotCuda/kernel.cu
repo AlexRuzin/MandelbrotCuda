@@ -1,7 +1,5 @@
 #include "cudaMandelbrot.h"
 
-#include "frame.h"
-
 #include "cuda_occupancy.h"
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
@@ -32,48 +30,10 @@ __constant__ rgbaPixel pixel_colour[16] =
 	{ 106,  52,   3 }
 };
 
-__global__ void mandelbrot_kernel(rgbaPixel *image,
+__global__ void mandelbrot_kernel(rgbaPixel* image,
 	int32_t width, int32_t height,
 	double scale,
-	double cx, double cy)
-{
-	const int i = threadIdx.y + blockIdx.y * blockDim.y;
-	const int j = threadIdx.x + blockIdx.x * blockDim.x;
-
-	if (i >= height || j >= width)
-	{
-		return;
-	}
-
-	const std::uint8_t max_iter = 255;
-	const double y = (i - (height >> 1)) * scale + cy;
-	const double x = (j - (width >> 1)) * scale + cx;
-
-	double zx = hypot(x - 0.25, y);
-
-	if (x < zx - 2.0 * zx * zx + 0.25 || (x + 1.0) * (x + 1.0) + y * y < 0.0625)
-	{
-		return;
-	}
-
-	std::uint8_t iter = 0;
-	double zy, zx2, zy2;
-	zx = zy = zx2 = zy2 = 0.0;
-
-	do {
-		zy = 2.0 * zx * zy + y;
-		zx = zx2 - zy2 + x;
-		zx2 = zx * zx;
-		zy2 = zy * zy;
-	} while (iter++ < max_iter && zx2 + zy2 < 4.0);
-
-	if (iter > 0 && iter < max_iter)
-	{
-		const std::uint8_t colour_idx = iter % 16;
-
-		image[i * width + j] = pixel_colour[colour_idx];
-	}
-}
+	double cx, double cy);
 
 template<class T, typename... A>
 error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
@@ -129,14 +89,13 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 	grid.x = grid.x > minGridSize ? grid.x : minGridSize;
 	grid.y = grid.y > minGridSize ? grid.y : minGridSize;
 
-#define _DEBUG
-#ifdef _DEBUG
+#ifdef CUDA_DEBUG_OUT
 	float occupancy = (maxActiveBlocks * blockSize / props.warpSize) / (float)(props.maxThreadsPerMultiProcessor / props.warpSize);
 
 	std::cout << "Grid of size " << grid.x * grid.y << std::endl;
 	std::cout << "Launched blocks of size " << blockSize << std::endl;
 	std::cout << "Theoretical occupancy " << occupancy * 100.0f << "%" << std::endl;
-#endif
+#endif //CUDA_DEBUG_OUT
 
 	cudaEvent_t start;
 	cudaEventCreate(&start);
@@ -162,7 +121,7 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 	return 0;
 }
 
-error_t cudaKernel::generate_mandelbrot_ppm(void)
+error_t cudaKernel::generate_mandelbrot(void)
 {
 	rgbaPixel *cudaBuffer;
 
@@ -170,8 +129,8 @@ error_t cudaKernel::generate_mandelbrot_ppm(void)
 	cudaMemset(cudaBuffer, 0, pixelBufferRawSize);
 
 	error_t err = launch_kernel(mandelbrot_kernel,
-		dim3(pixelLength, pixelHeight), (void*)cudaBuffer,
-		pixelLength, pixelHeight, scale, offsetX, offsetY);
+		dim3((int32_t)pixelLength, (int32_t)pixelHeight), cudaBuffer,
+		(int32_t)pixelLength, (int32_t)pixelHeight, scale, offsetX, offsetY);
 	if (err != 0) {
 		return err;
 	}
@@ -180,4 +139,47 @@ error_t cudaKernel::generate_mandelbrot_ppm(void)
 	cudaFree(cudaBuffer);
 
 	return 0;
+}
+
+__global__ void mandelbrot_kernel(rgbaPixel* image,
+	int32_t width, int32_t height,
+	double scale,
+	double cx, double cy)
+{
+	const int i = threadIdx.y + blockIdx.y * blockDim.y;
+	const int j = threadIdx.x + blockIdx.x * blockDim.x;
+
+	if (i >= height || j >= width)
+	{
+		return;
+	}
+
+	const std::uint8_t max_iter = 255;
+	const double y = (i - (height >> 1)) * scale + cy;
+	const double x = (j - (width >> 1)) * scale + cx;
+
+	double zx = hypot(x - 0.25, y);
+
+	if (x < zx - 2.0 * zx * zx + 0.25 || (x + 1.0) * (x + 1.0) + y * y < 0.0625)
+	{
+		return;
+	}
+
+	std::uint8_t iter = 0;
+	double zy, zx2, zy2;
+	zx = zy = zx2 = zy2 = 0.0;
+
+	do {
+		zy = 2.0 * zx * zy + y;
+		zx = zx2 - zy2 + x;
+		zx2 = zx * zx;
+		zy2 = zy * zy;
+	} while (iter++ < max_iter && zx2 + zy2 < 4.0);
+
+	if (iter > 0 && iter < max_iter)
+	{
+		const std::uint8_t colour_idx = iter % 16;
+
+		image[i * width + j] = pixel_colour[colour_idx];
+	}
 }

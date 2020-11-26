@@ -1,6 +1,5 @@
 #pragma once
 
-#include "main.h"
 #include "ppm.h"
 #include "frame.h"
 

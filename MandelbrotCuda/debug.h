@@ -4,6 +4,12 @@
 #include <Windows.h>
 #endif //__WIN32
 
+#if !defined(DEBUG_LIBRARY_INCLUDED)
+#define DEBUG_LIBRARY_INCLUDED
+#else //DEBUG_LIBRARY_INCLUDED
+#pragma message("DEBUG_LIBRARY_INCLUDED already defined")
+#endif //DEBUG_LIBRARY_INCLUDED
+
 #include <vector>
 #include <string>
 #include <map>
@@ -17,15 +23,28 @@
 
 #undef DISABLE_DEBUG_LOGGING
 
+#undef USE_COMPLEX_DEBUGGING
+#if defined(USE_COMPLEX_DEBUGGING)
 #define DINFO(s) debug::d->debugPrint(debug::DEBUG_LEVEL_INFO, s)
 #define DERROR(s) debug::d->debugPrint(debug::DEBUG_LEVEL_ERROR, s)
 #define DWARNING(s) debug::d->debugPrint(debug::DEBUG_LEVEL_WARNING, s)
 #define DDEBUG(s) debug::d->debugPrint(debug::DEBUG_LEVEL_DEBUG, s)
+#endif //USE_COMPLEX_DEBUGGING
 
+#if !defined(USE_COMPLEX_DEBUGGING)
+void debugPrint(std::string level, std::string s);
+#define DINFO(s) debugPrint("INFO", s)
+#define DERROR(s) debugPrint("ERROR", s)
+#define DWARNING(s) debugPrint("WARN", s)
+#define DDEBUG(s) debugPrint("DEBUG", s)
+#endif
+
+#if defined(USE_COMPLEX_DEBUGGING)
 namespace debug
 {
+	extern "C" {
 	class debugOut;
-	debugOut *d;
+	extern debugOut *d;
 
 	enum {
 		DEBUG_LEVEL_INFO,
@@ -36,7 +55,7 @@ namespace debug
 
 	typedef uint32_t debugLevel;
 	typedef std::map<debugLevel, std::string> debugLevels;
-	debugLevels debug = {
+	extern debugLevels debug = {
 		{DEBUG_LEVEL_INFO, "INFO"},
 		{DEBUG_LEVEL_ERROR, "ERROR"},
 		{DEBUG_LEVEL_WARNING, "WARN"},
@@ -86,66 +105,15 @@ namespace debug
 			}
 		}
 
-		void debugPrint(debugLevel level, const std::string s)
-		{		
-			assert(debug.find(level) != debug.end());
-
-			this->writeSync.lock();
-
-#if defined(DISABLE_DEBUG_LOGGING)
-			return;
-#endif //DISABLE_DEBUG_LOGGING
-
-			std::string ss;
-			if (DEBUG_FLAG_TIMESTAMP & flags) {
-				time_t rawtime;
-				struct tm *timeinfo;
-				char buffer[80] = { 0 };
-
-				std::time(&rawtime);
-				timeinfo = std::localtime(&rawtime);
-
-				std::strftime(buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", timeinfo);
-				std::string str(buffer);
-
-				ss = "[" + str + "]\t" + "[" + debug[level] + "] " + s + "\n";
-			} else {
-				ss = "[" + debug[level] + "] " + s + "\n";
-			}
-
-
-			if (DEBUG_FLAG_LOGFILE & flags) {
-				*outfile << ss;
-			}
-
-			log.push_back(ss);
-
-			if (DEBUG_FLAG_STDOUT & flags) {
-#if defined(_WIN32)
-				OutputDebugStringA(ss.c_str());
-#else  //_WIN32
-				std::cout << ss << std::endl;
-#endif //_WIN32
-			}
-			this->writeSync.unlock();
-		}
+		void debugPrint(debugLevel level, const std::string s);
 	};
 
-	debugOut* init_debug(const std::string* filename, debugFlags flags)
-	{
-		debugOut *o = new debugOut(filename, flags);
-		d = o;
-		return o;
-	}
+	extern debugOut* init_debug(const std::string* filename, debugFlags flags);
 
-	void sleep(uint32_t ms)
-	{
-#if defined(_WIN32)
-		Sleep(ms);
-#else //_WIN32
+	extern void sleep(uint32_t ms);
 
-#endif //_WIN32
-	}
+	} // Extern C
 }
+#endif //USE_COMPLEX_DEBUGGING
 
 //EOF

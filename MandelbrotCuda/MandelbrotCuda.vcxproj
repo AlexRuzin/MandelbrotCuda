@@ -81,6 +81,7 @@
     <CudaCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="controller.h" />
     <ClInclude Include="cudaMandelbrot.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="frame.h" />
@@ -88,6 +89,11 @@
     <ClInclude Include="mandelbrot_cpu.h" />
     <ClInclude Include="ppm.h" />
     <ClInclude Include="sdl_render.h" />
+    <ClInclude Include="types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="debug.cpp" />
+    <ClCompile Include="sdl_render.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

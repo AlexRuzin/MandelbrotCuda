@@ -1,11 +1,12 @@
 #pragma once
 
-#include "main.h"
-#include "frame.h"
+//#include "frame.h"
 
 #include <string>
 #include <vector>
 #include <fstream>
+
+#include "types.h"
 
 namespace ppm {
 	typedef struct ppm_pixel {
