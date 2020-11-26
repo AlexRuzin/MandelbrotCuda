@@ -18,4 +18,30 @@ typedef struct rgbaPixel {
 };
 typedef rgbaPixel* rgbaArray;
 
+class controller {
+private:
+	// Inputs 
+	const double origOffsetX, origOffsetY;
+	
+	// Total size of the pixelBuffer (in bytes)
+	const size_t pixelBufferRawSize;
+	const size_t pixelLength, pixelHeight;
+
+	// Pointer from CUDA kernel to the rgba frame buffer
+	rgbaPixel* frameBuffer;
+
+
+public:
+	controller(
+		double offsetX, double offsetY,
+		size_t length, size_t height) :
+
+		origOffsetX(offsetX), origOffsetY(offsetY),
+		pixelLength(length), pixelHeight(height), pixelBufferRawSize(length * height * sizeof(rgbaPixel))
+	{
+
+	}
+
+};
+
 //EOF

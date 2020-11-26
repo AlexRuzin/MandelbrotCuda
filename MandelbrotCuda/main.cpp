@@ -24,7 +24,7 @@
 #undef TEST_MANDELBROT_CPU_FRAME
 
 // Tests the mandelbrot GPU renderer
-#define TEST_MANDELBROT_GPU
+#undef TEST_MANDELBROT_GPU
 
 #define PPM_OUTPUT_FILE "output.ppm"
 
