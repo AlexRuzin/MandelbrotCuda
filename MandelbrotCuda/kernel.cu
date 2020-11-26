@@ -12,7 +12,7 @@ float elapsedTime = 0;
 
 using namespace cuda;
 
-__constant__ frame::rgbPixel pixel_colour[16] =
+__constant__ rgbaPixel pixel_colour[16] =
 {
 	{ 66,  30,  15 },{ 25,   7,  26 },{ 9,   1,  47 },{ 4,   4,  73 },
 	{ 0,   7, 100 },{ 12,  44, 138 },{ 24,  82, 177 },{ 57, 125, 209 },
@@ -20,7 +20,7 @@ __constant__ frame::rgbPixel pixel_colour[16] =
 	{ 255, 170,   0 },{ 204, 128,   0 },{ 153,  87,   0 },{ 106,  52,   3 }
 };
 
-__global__ void mandelbrot_kernel(frame::rgbPixel* image,
+__global__ void mandelbrot_kernel(rgbaPixel *image,
 	int32_t width, int32_t height,
 	double scale,
 	double cx, double cy)
@@ -150,20 +150,22 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 	return 0;
 }
 
-error_t cudaKernel::generate_mandelbrot(void)
+error_t cudaKernel::generate_mandelbrot_ppm(void)
 {
-	cudaMalloc((void**)&this->pixelData, image_size);
-	cudaMemset(pixelData, 0, image_size);
+	rgbaPixel *cudaBuffer;
+
+	cudaMalloc((void**)&cudaBuffer, pixelBufferRawSize);
+	cudaMemset(cudaBuffer, 0, pixelBufferRawSize);
 
 	error_t err = launch_kernel(mandelbrot_kernel,
-		dim3(image_width, image_height), pixelData,
-		image_width, image_height, scale, cx, cy);
+		dim3(pixelLength, pixelHeight), (void*)cudaBuffer,
+		pixelLength, pixelHeight, scale, offsetX, offsetY);
 	if (err != 0) {
 		return err;
 	}
 
-	cudaMemcpy(&image->data[0], pixelData, image_size, cudaMemcpyDeviceToHost);
-	cudaFree(pixelData);
+	cudaMemcpy((void*)&this->pixelBuffer, cudaBuffer, pixelBufferRawSize, cudaMemcpyDeviceToHost);
+	cudaFree(cudaBuffer);
 
 	return 0;
 }

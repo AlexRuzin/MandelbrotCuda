@@ -16,28 +16,35 @@
 namespace cuda {
 	class cudaKernel {
 	private:
-		double cx, cy;
-		const uint32_t image_size;
-		const uint32_t image_width, image_height;
-		const double scale;
-		frame::image *image;
+		// x,y position of the fractal image
+		const double origOffsetX, origOffsetY;
+		double offsetX, offsetY;
 
-		frame::rgbPixel *pixelData;
+		// Total size of the pixelBuffer (in bytes)
+		const size_t pixelBufferRawSize;
+		const size_t pixelLength, pixelHeight;
+
+		// CUDA frame buffer object
+		rgbaPixel* pixelBuffer;
+
+		const double scale;
 
 	public:
-		error_t generate_mandelbrot(void);
+		error_t generate_mandelbrot_ppm(void);
 
 	private:
 		template<class T, typename... A>
 		error_t launch_kernel(T& kernel, dim3 work, A&&... args);
 
 	public:
-		cudaKernel(frame::image* image, double cx, double cy) :
-			cx(cx), cy(cy),
-			image_size(image->get_height() * image->get_width() * sizeof(frame::rgbPixel)),
-			scale(IMAGE_SCALEA / (image->get_width() / IMAGE_SCALEB)),
-			image_width(image->get_width()), image_height(image->get_height()),
-			image(image)
+		// Constructor for PPM image generator
+		cudaKernel(double offsetX, double offsetY, size_t pixelLength, size_t pixelHeight) :
+			origOffsetX(offsetX), origOffsetY(offsetY),
+			offsetX(offsetX), offsetY(offsetY),
+			pixelBuffer(nullptr),
+			pixelLength(pixelLength), pixelHeight(pixelHeight),
+			pixelBufferRawSize(pixelLength * pixelHeight * sizeof(rgbaPixel)), 
+			scale(IMAGE_SCALEA / (pixelLength / IMAGE_SCALEB))
 		{
 
 		}
