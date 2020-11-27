@@ -192,14 +192,20 @@ error_t sdlBase::render_loop(sdlBase* b)
 	assert(b->window != nullptr && b->renderer != nullptr);
 	DINFO("Starting SDL2 renderer loop thread");
 
-#if defined(RENDER_ENABLE_FPS_CAP)
 	SDL_Color textColor = { 0, 0, 0, 255 };
+
+#if defined(RENDER_ENABLE_FPS_CAP)
 	b->fpsTimer.start();
 	uint32_t countedFrames = 0;
 	std::stringstream timeText;
 	LTexture fpsTexture(b->renderer);
 #endif //RENDER_ENABLE_FPS_CAP
 
+#if defined(RENDER_CUDA_STATS)
+	LTexture cudaStatsTexture(b->renderer);
+#endif //RENDER_CUDA_STATS
+
+	// Primary frame texture
 	SDL_Texture* frameTexture = SDL_CreateTexture
 	(
 		renderer,
@@ -228,6 +234,16 @@ error_t sdlBase::render_loop(sdlBase* b)
 			break;
 		}
 #endif //RENDER_ENABLE_FPS_CAP
+
+#if defined(RENDER_CUDA_STATS)
+		std::stringstream cudaStats;
+		cudaStats << "Last CUDA rendering time: " << b->cudaTimeElapsed.frameRenderElapsedms << " ms";
+		if (cudaStatsTexture.loadFromRenderedText(cudaStats.str().c_str(), textColor))
+		{
+			DERROR("render_loop: Failed to load CUDA stats texture");
+			break;
+		}
+#endif //RENDER_CUDA_STATS
 
 		SDL_Event sdlEvent;
 		while (SDL_PollEvent(&sdlEvent) != 0) {
@@ -306,6 +322,12 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 		// Copy frame image into renderer
 		SDL_RenderCopy(renderer, frameTexture, NULL, NULL);
+
+
+#if defined(RENDER_CUDA_STATS)
+		cudaStatsTexture.render(0, 50);
+#endif //RENDER_CUDA_STATS
+
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 #if defined(RENDER_SHOW_FPS_STRING)

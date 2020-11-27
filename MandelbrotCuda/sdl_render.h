@@ -6,6 +6,7 @@
 
 #include <mutex>
 #include <assert.h>
+#include <chrono>
 
 #include "types.h"
 
@@ -22,6 +23,9 @@
 #define RENDER_SHOW_FPS_STRING
 #endif //RENDER_ENABLE_FPS_CAP
 
+// Renders the CUDA time elapsed stats
+#define RENDER_CUDA_STATS
+
 #define COLOR_WHITE frame::rgbPixel{ 255, 255, 255 }
 
 namespace render
@@ -35,6 +39,7 @@ namespace render
 	private:
 		uint32_t mStartTicks, mPausedTicks;
 		bool mPaused, mStarted;
+
 
 	public:
 		sdlTimer(void) :
@@ -99,6 +104,9 @@ namespace render
 		int getHeight() const { return mHeight; }
 	};
 
+	typedef struct cudaRenderingStats {
+		double frameRenderElapsedms; // milliseconds
+	} CUDA_RENDERING_STATS, *PCUDA_RENDERING_STATS;
 
 	class sdlBase {
 	private:
@@ -120,6 +128,9 @@ namespace render
 		// Render loop flag
 		bool doRender;
 		std::thread *renderThread;
+
+		// Counter for the CUDA rendering
+		cudaRenderingStats cudaTimeElapsed;
 
 		// Frame counter
 	private:
@@ -150,6 +161,12 @@ namespace render
 			doRender = false;
 		}
 
+		void update_cuda_rendering_stats(cudaRenderingStats stats)
+		{
+			cudaTimeElapsed = stats;
+		}
+
+
 	public:
 		sdlBase(size_t height, size_t width, std::string windowTitle) :
 			windowHeight(height), windowWidth(width), windowTitle(windowTitle),
@@ -157,6 +174,7 @@ namespace render
 			doRender(false), renderThread(nullptr), 		
 			frameBuffer(nullptr), framePixelHeight(0), framePixelLength(0), refreshBuffer(false),
 			frameBufferLock(new std::mutex()),
+			cudaTimeElapsed(cudaRenderingStats{ 56666666555 }),
 #if defined(RENDER_ENABLE_FPS_CAP)
 			frameCount(0)
 #endif //RENDER_ENABLE_FPS_CAP

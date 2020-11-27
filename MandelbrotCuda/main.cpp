@@ -83,11 +83,18 @@ int WINAPI WinMain(HINSTANCE hinstance,
 #if defined(TEST_CONTROLLER_PATH)
     controller::loopTimer controller(FRACTAL_OFFSET_X, FRACTAL_OFFSET_Y, RENDER_WINDOW_LENGTH, RENDER_WINDOW_HEIGHT);
 
+    err = controller.create_cuda_thread();
+    if (err != 0) {
+        DERROR("Error creating thread: " + std::to_string(err));
+        return err;
+    }
+
     // Main thread does not leave this loop
-    controller.init_sdl2_renderer(WINDOW_NAME);
-
-
-
+    err = controller.init_sdl2_renderer(WINDOW_NAME);
+    if (err != 0) {
+        DERROR("SDL2 engine exited with error:" + std::to_string(err));
+        return err;
+    }
 
 #endif //TEST_CONTROLLER_PATH
 

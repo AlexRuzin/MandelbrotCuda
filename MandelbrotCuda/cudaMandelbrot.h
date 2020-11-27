@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <assert.h>
 
 #include "types.h"
 
@@ -28,12 +29,18 @@ namespace cuda {
 		const size_t pixelLength, pixelHeight;
 
 		// CUDA frame buffer object
-		rgbaPixel* pixelBuffer;
+		rgbaPixel *pixelBuffer;
 
 		const double scale;
 
 	public:
 		error_t generate_mandelbrot(void);
+
+		rgbaPixel *get_pixel_buffer(void) const
+		{
+			assert(pixelBuffer != nullptr);
+			return pixelBuffer;
+		}
 
 	private:
 		template<class T, typename... A>

@@ -1,8 +1,13 @@
 #pragma once
 
 #include <random>
+#include <thread>
+#include <string>
+#include <chrono>
+#include <assert.h>
 
 #include "types.h"
+#include "cudaMandelbrot.h"
 #include "sdl_render.h"
 
 #define DEFAULT_WINDOW_NAME "sdl_window"
@@ -30,6 +35,11 @@ namespace controller {
 		// SDL2 render loop
 		render::sdlBase *renderer;
 
+		// CUDA renderer
+		cuda::cudaKernel *cudaKernel;
+		std::thread *cudaThread;
+		bool runCudaThread;
+
 	private:
 		rgbaPixel *generate_blank_frame(size_t pixelCount) const
 		{
@@ -44,19 +54,53 @@ namespace controller {
 			return out;
 		}
 
+		friend static void cuda_render_thread(loopTimer* controller)
+		{
+			while(controller->runCudaThread) {
+
+				error_t err = controller->cudaKernel->generate_mandelbrot();
+				if (err != 0) {
+					DERROR("Error in generating CUDA kernel: " + std::to_string(err));
+				}
+				Sleep(1000);
+
+				rgbaPixel *pixelBuffer = controller->cudaKernel->get_pixel_buffer();
+				assert(pixelBuffer != nullptr);
+
+				controller->renderer->write_static_frame(pixelBuffer, controller->pixelLength, controller->pixelHeight);
+			}
+		}
+
 	public:
 		loopTimer(
 			double offsetX, double offsetY,
 			size_t length, size_t height) :
-
 			renderer(nullptr),
 			origOffsetX(offsetX), origOffsetY(offsetY),
-			pixelLength(length), pixelHeight(height), pixelBufferRawSize(length* height * sizeof(rgbaPixel))
+			pixelLength(length), pixelHeight(height), pixelBufferRawSize(length* height * sizeof(rgbaPixel)),
+			cudaKernel(nullptr), cudaThread(nullptr),
+			runCudaThread(false)
 		{
 
 		}
 
+		error_t create_cuda_thread(void)
+		{
+			assert(cudaKernel == nullptr);
+			this->cudaKernel = new cuda::cudaKernel(origOffsetX, origOffsetY, pixelLength, pixelHeight);
 
+			runCudaThread = true;
+			this->cudaThread = new std::thread(&cuda_render_thread, this);
+			DINFO("Created CUDA rendering thread");
+
+			return 0;
+		}
+
+		void stop_cuda_thread(void)
+		{
+			assert(runCudaThread == true);
+			runCudaThread = false;
+		}
 
 		error_t init_sdl2_renderer(const std::string windowName)
 		{
