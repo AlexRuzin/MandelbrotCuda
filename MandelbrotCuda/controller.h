@@ -57,12 +57,11 @@ namespace controller {
 		friend static void cuda_render_thread(loopTimer* controller)
 		{
 			while(controller->runCudaThread) {
-
+				Sleep(1000);
 				error_t err = controller->cudaKernel->generate_mandelbrot();
 				if (err != 0) {
 					DERROR("Error in generating CUDA kernel: " + std::to_string(err));
-				}
-				Sleep(1000);
+				}				
 
 				rgbaPixel *pixelBuffer = controller->cudaKernel->get_pixel_buffer();
 				assert(pixelBuffer != nullptr);
