@@ -1,4 +1,5 @@
 #include "cudaMandelbrot.h"
+#include "debug.h"
 
 #include "cuda_occupancy.h"
 #include "cuda_runtime.h"
@@ -34,6 +35,8 @@ inline void cudaAssert(cudaError_t status, const char* file, const char* func, i
 		ss << "Func: " << func << std::endl;
 		ss << "File: " << file << std::endl;
 		ss << "Line: " << line << std::endl;
+
+		DERROR(ss.str());
 
 		throw std::runtime_error(ss.str());
 	}
@@ -158,13 +161,17 @@ error_t cudaKernel::generate_mandelbrot(void)
 	cudaCall(cudaMemset, cudaBuffer, 0x0, pixelBufferRawSize);
 
 	error_t err = launch_kernel(mandelbrot_kernel,
-		dim3((int32_t)pixelLength, (int32_t)pixelHeight), cudaBuffer,
-		(int32_t)pixelLength, (int32_t)pixelHeight, scale, offsetX, offsetY);
+		dim3((int32_t)pixelLength, (int32_t)pixelHeight), 
+		cudaBuffer,
+		(int32_t)pixelLength, (int32_t)pixelHeight, 
+		scale, 
+		offsetX, offsetY);
 	if (err != 0) {
 		return err;
 	}
 
-	cudaCall(cudaMemcpy, &this->pixelBuffer[0], cudaBuffer, pixelBufferRawSize, cudaMemcpyDeviceToHost);
+	cudaCall(cudaMemcpy, (void*)&pixelBuffer[0], (const void *)cudaBuffer, 
+		(const size_t)pixelBufferRawSize, cudaMemcpyDeviceToHost);
 	cudaCall(cudaFree, cudaBuffer);
 
 	return 0;
