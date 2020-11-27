@@ -291,6 +291,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 			
 			refreshBuffer = false;
 		}
+		/*
 		else {
 			SDL_UpdateTexture
 			(
@@ -300,6 +301,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 				frameTotalPixels * sizeof(rgbaPixel)
 			);
 		}
+		*/
 		frameBufferLock->unlock();
 
 		// Copy frame image into renderer

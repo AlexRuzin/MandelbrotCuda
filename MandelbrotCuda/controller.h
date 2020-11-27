@@ -1,9 +1,15 @@
 #pragma once
 
+#include <random>
+
 #include "types.h"
 #include "sdl_render.h"
 
 #define DEFAULT_WINDOW_NAME "sdl_window"
+
+// prng
+// https://stackoverflow.com/questions/25298585/efficiently-generating-random-bytes-of-data-in-c11-14
+using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char>;
 
 namespace controller {
 	class loopTimer {
@@ -30,9 +36,9 @@ namespace controller {
 			rgbaPixel *out = (rgbaPixel *)std::malloc(pixelCount * sizeof(rgbaPixel));
 			std::memset((void*)out, 0x0, (size_t)(pixelCount * sizeof(rgbaPixel)));
 			for (uint32_t i = 0; i < pixelCount; i++) {
-				out[i].red = 0xff;
-				out[i].blue	= 0xff;
-				out[i].green = 0xff;
+				out[i].red = std::rand() % 256;
+				out[i].blue = std::rand() % 256;
+				out[i].green = std::rand() % 256;
 			}
 
 			return out;
@@ -49,6 +55,8 @@ namespace controller {
 		{
 
 		}
+
+
 
 		error_t init_sdl2_renderer(const std::string windowName)
 		{
