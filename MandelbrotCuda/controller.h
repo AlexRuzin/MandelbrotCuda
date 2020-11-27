@@ -1,14 +1,18 @@
 #pragma once
 
+#include <Windows.h>
+
 #include <random>
 #include <thread>
 #include <string>
 #include <chrono>
 #include <assert.h>
 
+
 #include "types.h"
 #include "cudaMandelbrot.h"
 #include "sdl_render.h"
+#include "debug.h"
 
 #define DEFAULT_WINDOW_NAME "sdl_window"
 

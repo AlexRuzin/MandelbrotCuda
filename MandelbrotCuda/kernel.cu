@@ -4,11 +4,40 @@
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
+#include <assert.h>
+#include <string>       // std::string
+#include <iostream>     // std::cout
+#include <sstream>      // std::stringstream
+
 #define CUDA_MANDELBROT_INTERATIONS 32
 
 float elapsedTime = 0;
 
 using namespace cuda;
+
+#if !defined(_DEBUG)
+#define _DEBUG
+#endif //_DEBUG
+
+#if _DEBUG
+#   define cudaCall(cuda_func, ...) { cudaError_t status = cuda_func(__VA_ARGS__); cudaAssert((status), __FILE__, #cuda_func, __LINE__); }
+#else
+#   define cudaCall(cuda_func, ...) { cudaError_t status = cuda_func(__VA_ARGS__); }
+#endif
+
+inline void cudaAssert(cudaError_t status, const char* file, const char* func, int line)
+{
+	if (status != cudaSuccess)
+	{
+		std::stringstream ss;
+		ss << "Error: " << cudaGetErrorString(status) << std::endl;
+		ss << "Func: " << func << std::endl;
+		ss << "File: " << file << std::endl;
+		ss << "Line: " << line << std::endl;
+
+		throw std::runtime_error(ss.str());
+	}
+}
 
 __constant__ rgbaPixel pixel_colour[16] =
 {
@@ -40,8 +69,8 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 {
 	int device;
 	cudaDeviceProp props;
-	cudaGetDevice(&device);
-	cudaGetDeviceProperties(&props, device);
+	cudaCall(cudaGetDevice, &device);
+	cudaCall(cudaGetDeviceProperties, &props, device);
 
 	int threadBlocks;
 	if (props.major == 2)
@@ -98,25 +127,25 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 #endif //CUDA_DEBUG_OUT
 
 	cudaEvent_t start;
-	cudaEventCreate(&start);
+	cudaCall(cudaEventCreate, &start);
 
 	cudaEvent_t stop;
-	cudaEventCreate(&stop);
+	cudaCall(cudaEventCreate, &stop);
 
-	cudaEventRecord(start, 0);
+	cudaCall(cudaEventRecord, start, 0);
 
 	kernel << < grid, block >> > (std::forward<A>(args)...);
 
-	cudaGetLastError();
-	cudaEventRecord(stop, 0);
-	cudaEventSynchronize(stop);
+	cudaCall(cudaGetLastError);
+	cudaCall(cudaEventRecord, stop, 0);
+	cudaCall(cudaEventSynchronize, stop);
 
-	cudaEventElapsedTime(&elapsedTime, start, stop);
+	cudaCall(cudaEventElapsedTime, &elapsedTime, start, stop);
 
-	cudaEventDestroy(start);
-	cudaEventDestroy(stop);
+	cudaCall(cudaEventDestroy, start);
+	cudaCall(cudaEventDestroy, stop);
 
-	cudaProfilerStop();
+	cudaCall(cudaProfilerStop);
 
 	return 0;
 }
@@ -125,8 +154,8 @@ error_t cudaKernel::generate_mandelbrot(void)
 {
 	rgbaPixel *cudaBuffer;
 
-	cudaMalloc((void**)&cudaBuffer, pixelBufferRawSize);
-	cudaMemset(cudaBuffer, 0, pixelBufferRawSize);
+	cudaCall(cudaMalloc, (void**)&cudaBuffer, pixelBufferRawSize);
+	cudaCall(cudaMemset, cudaBuffer, 0x0, pixelBufferRawSize);
 
 	error_t err = launch_kernel(mandelbrot_kernel,
 		dim3((int32_t)pixelLength, (int32_t)pixelHeight), cudaBuffer,
@@ -135,13 +164,13 @@ error_t cudaKernel::generate_mandelbrot(void)
 		return err;
 	}
 
-	cudaMemcpy((void*)&this->pixelBuffer, cudaBuffer, pixelBufferRawSize, cudaMemcpyDeviceToHost);
-	cudaFree(cudaBuffer);
+	cudaCall(cudaMemcpy, &this->pixelBuffer[0], cudaBuffer, pixelBufferRawSize, cudaMemcpyDeviceToHost);
+	cudaCall(cudaFree, cudaBuffer);
 
 	return 0;
 }
 
-__global__ void mandelbrot_kernel(rgbaPixel* image,
+__global__ void mandelbrot_kernel(rgbaPixel *image,
 	int32_t width, int32_t height,
 	double scale,
 	double cx, double cy)
@@ -180,6 +209,9 @@ __global__ void mandelbrot_kernel(rgbaPixel* image,
 	{
 		const std::uint8_t colour_idx = iter % 16;
 
-		image[i * width + j] = pixel_colour[colour_idx];
+		image[i * width + j].red = pixel_colour[colour_idx].red;
+		image[i * width + j].green = pixel_colour[colour_idx].green;
+		image[i * width + j].blue = pixel_colour[colour_idx].blue;
+		image[i * width + j].alpha = 0x0;
 	}
 }
