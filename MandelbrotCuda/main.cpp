@@ -31,6 +31,9 @@
 // Tests the mandelbrot GPU renderer
 #undef TEST_MANDELBROT_GPU
 
+// Tests the controller path
+#define TEST_CONTROLLER_PATH
+
 #define PPM_OUTPUT_FILE "output.ppm"
 
 // Defines
@@ -52,6 +55,7 @@ int WINAPI WinMain(HINSTANCE hinstance,
     LPSTR lpcmdline,
     int ncmdshow)
 { 
+    error_t err = 0;
     DINFO("Starting application");
 
 #if defined(TEST_MANDELBROT_CPU_PPM)
@@ -76,6 +80,16 @@ int WINAPI WinMain(HINSTANCE hinstance,
     }
 #endif //TEST_MANDELBROT_CPU_FRAME
 
+#if defined(TEST_CONTROLLER_PATH)
+    controller::loopTimer controller(FRACTAL_OFFSET_X, FRACTAL_OFFSET_Y, RENDER_WINDOW_LENGTH, RENDER_WINDOW_HEIGHT);
+
+    // Main thread does not leave this loop
+    controller.init_sdl2_renderer(WINDOW_NAME);
+
+
+
+
+#endif //TEST_CONTROLLER_PATH
 
 #if defined(TEST_MANDELBROT_GPU)
     frame::image frameBuf(FRAME_BUFFER_LENGTH, FRAME_BUFFER_HEIGHT);

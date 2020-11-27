@@ -109,7 +109,7 @@ namespace render
 		SDL_Renderer *renderer;
 
 		// Frame buffer sync 
-		std::mutex frameBufferLock;
+		std::mutex *frameBufferLock;
 		
 		// Frame buffer (SDL2 texture array)
 		//   Each pixel contains r, g, b, alpha, 8 bits each
@@ -156,6 +156,7 @@ namespace render
 			window(nullptr), renderer(nullptr),
 			doRender(false), renderThread(nullptr), 		
 			frameBuffer(nullptr), framePixelHeight(0), framePixelLength(0), refreshBuffer(false),
+			frameBufferLock(new std::mutex()),
 #if defined(RENDER_ENABLE_FPS_CAP)
 			frameCount(0)
 #endif //RENDER_ENABLE_FPS_CAP

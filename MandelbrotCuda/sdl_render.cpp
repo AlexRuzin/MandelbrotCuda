@@ -275,7 +275,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 		SDL_RenderClear(renderer);
 
 		// Draw raw frame buffer
-		frameBufferLock.lock();
+		frameBufferLock->lock();
 		if (refreshBuffer) {
 			unsigned char* lockedPixels = nullptr;
 			int pitch = 0;
@@ -288,6 +288,8 @@ error_t sdlBase::render_loop(sdlBase* b)
 			);
 			std::memcpy(lockedPixels, frameBuffer, frameTotalPixels * sizeof(rgbaPixel));
 			SDL_UnlockTexture(frameTexture);
+			
+			refreshBuffer = false;
 		}
 		else {
 			SDL_UpdateTexture
@@ -298,7 +300,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 				frameTotalPixels * sizeof(rgbaPixel)
 			);
 		}
-		frameBufferLock.unlock();
+		frameBufferLock->unlock();
 
 		// Copy frame image into renderer
 		SDL_RenderCopy(renderer, frameTexture, NULL, NULL);
@@ -331,7 +333,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 void sdlBase::write_static_frame(__in rgbaPixel* frame, size_t length, size_t height)
 {
-	frameBufferLock.lock();
+	frameBufferLock->lock();
 
 	if (this->frameBuffer != nullptr) {
 		std::free(frameBuffer);
@@ -339,10 +341,11 @@ void sdlBase::write_static_frame(__in rgbaPixel* frame, size_t length, size_t he
 
 	framePixelLength = length;
 	framePixelHeight = height;
-	frameTotalPixels = framePixelHeight * framePixelLength * sizeof(rgbaPixel);
+	frameTotalPixels = framePixelHeight * framePixelLength;
 	frameBuffer = frame;
+	refreshBuffer = true;
 
-	frameBufferLock.unlock();
+	frameBufferLock->unlock();
 }
 
 error_t sdlBase::init_window(void)

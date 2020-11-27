@@ -53,3 +53,5 @@ namespace cuda {
 		}
 	};	
 }
+
+//EOF
