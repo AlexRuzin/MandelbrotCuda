@@ -170,6 +170,8 @@ error_t cudaKernel::generate_mandelbrot(void)
 		return err;
 	}
 
+	pixelBuffer = (rgbaPixel *)std::malloc(pixelBufferRawSize);
+	std::memset(pixelBuffer, 0x0, pixelBufferRawSize);
 	cudaCall(cudaMemcpy, (void*)&pixelBuffer[0], (const void *)cudaBuffer, 
 		(const size_t)pixelBufferRawSize, cudaMemcpyDeviceToHost);
 	cudaCall(cudaFree, cudaBuffer);

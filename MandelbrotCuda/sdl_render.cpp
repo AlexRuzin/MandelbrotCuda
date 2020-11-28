@@ -192,7 +192,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 	assert(b->window != nullptr && b->renderer != nullptr);
 	DINFO("Starting SDL2 renderer loop thread");
 
-	SDL_Color textColor = { 0, 0, 0, 255 };
+	SDL_Color textColor = { 255, 255, 255, 255 };
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 	b->fpsTimer.start();
