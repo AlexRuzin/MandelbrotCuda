@@ -325,7 +325,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 
 #if defined(RENDER_CUDA_STATS)
-		cudaStatsTexture.render(0, 50);
+		cudaStatsTexture.render(0, 30);
 #endif //RENDER_CUDA_STATS
 
 

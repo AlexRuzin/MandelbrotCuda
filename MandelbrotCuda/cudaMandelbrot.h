@@ -9,9 +9,6 @@
 #include "cuda_runtime.h"
 #include "cuda_profiler_api.h"
 
-#define IMAGE_SCALEA 1.0  //1.0
-#define IMAGE_SCALEB 4.0 //4.0
-
 #define USE_CUDA_PERFORMANCE_METRICS
 
 // Debug output for CUDA grid sizes
@@ -31,7 +28,9 @@ namespace cuda {
 		// CUDA frame buffer object
 		rgbaPixel *pixelBuffer;
 
-		const double scale;
+		// Scales
+		double scaleA, scaleB;
+		double scale;
 
 	public:
 		error_t generate_mandelbrot(void);
@@ -54,7 +53,25 @@ namespace cuda {
 			pixelBuffer(nullptr),
 			pixelLength(pixelLength), pixelHeight(pixelHeight),
 			pixelBufferRawSize(pixelLength * pixelHeight * sizeof(rgbaPixel)), 
-			scale(IMAGE_SCALEA / (pixelLength / IMAGE_SCALEB))
+			scale(1.0 / (pixelLength / 4.0))
+		{
+
+		}
+
+		// Constructor for CUDA
+		cudaKernel(double offsetX, double offsetY, size_t pixelLength, size_t pixelHeight, double scaleA, double scaleB) :
+			origOffsetX(offsetX), origOffsetY(offsetY),
+			offsetX(offsetX), offsetY(offsetY),
+			pixelBuffer(nullptr),
+			pixelLength(pixelLength), pixelHeight(pixelHeight),
+			pixelBufferRawSize(pixelLength *pixelHeight * sizeof(rgbaPixel)),
+			scaleA(scaleA), scaleB(scaleB),
+			scale(scaleA / (pixelLength / scaleB))
+		{
+
+		}
+
+		~cudaKernel(void)
 		{
 
 		}

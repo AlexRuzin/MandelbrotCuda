@@ -33,4 +33,8 @@
 
 #define DEBUG_LOG_FILE          "debug.log"
 
+// CUDA scale parameter
+#define IMAGE_SCALEA			1.0  //1.0
+#define IMAGE_SCALEB			4.0  //4.0
+
 //EOF

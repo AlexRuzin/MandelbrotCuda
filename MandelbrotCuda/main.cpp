@@ -53,7 +53,10 @@ int WINAPI WinMain(HINSTANCE hinstance,
 #endif //TEST_MANDELBROT_CPU_FRAME
 
 #if defined(TEST_CONTROLLER_PATH)
-    controller::loopTimer controller(FRACTAL_OFFSET_X, FRACTAL_OFFSET_Y, RENDER_WINDOW_LENGTH, RENDER_WINDOW_HEIGHT);
+    controller::loopTimer controller(
+        FRACTAL_OFFSET_X, FRACTAL_OFFSET_Y, 
+        RENDER_WINDOW_LENGTH, RENDER_WINDOW_HEIGHT,
+        IMAGE_SCALEA, IMAGE_SCALEB);
 
     err = controller.create_cuda_thread();
     if (err != 0) {

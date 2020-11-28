@@ -16,6 +16,13 @@
 
 #define DEFAULT_WINDOW_NAME "sdl_window"
 
+// Time for the CUDA rendering thread to wait
+#define CUDA_THREAD_SLEEP_TIME 10 //ms
+
+// Measures CUDA execution time
+#define MEASURE_CUDA_EXECUTION_TIME 
+
+
 // prng
 // https://stackoverflow.com/questions/25298585/efficiently-generating-random-bytes-of-data-in-c11-14
 using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char>;
@@ -25,6 +32,7 @@ namespace controller {
 	private:
 		// Inputs 
 		const double origOffsetX, origOffsetY;
+		const double origScaleA, origScaleB;
 
 		// Total size of the pixelBuffer (in bytes)
 		const size_t pixelBufferRawSize;
@@ -68,7 +76,11 @@ namespace controller {
 		friend static void cuda_render_thread(loopTimer *controller)
 		{
 			while(controller->runCudaThread) {
-				Sleep(1000);
+				Sleep(10);
+
+#if defined(MEASURE_CUDA_EXECUTION_TIME)
+				auto t1 = std::chrono::high_resolution_clock::now();
+#endif //MEASURE_CUDA_EXECUTION_TIME
 				error_t err = controller->cudaKernel->generate_mandelbrot();
 				if (err != 0) {
 					DERROR("Error in generating CUDA kernel: " + std::to_string(err));
@@ -78,6 +90,13 @@ namespace controller {
 				assert(pixelBuffer != nullptr);
 
 				controller->renderer->write_static_frame(pixelBuffer, controller->pixelLength, controller->pixelHeight);
+
+#if defined(MEASURE_CUDA_EXECUTION_TIME)
+				auto t2 = std::chrono::high_resolution_clock::now();
+				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+				const double cudaExecTime = std::chrono::duration<double>(duration).count();
+				controller->renderer->update_cuda_rendering_stats(render::cudaRenderingStats{ cudaExecTime });
+#endif //MEASURE_CUDA_EXECUTION_TIME
 			}
 		}
 
@@ -99,12 +118,14 @@ namespace controller {
 	public:
 		loopTimer(
 			double offsetX, double offsetY,
-			size_t length, size_t height) :
+			size_t length, size_t height,
+			double scaleA, double scaleB) :
 			renderer(nullptr),
 			origOffsetX(offsetX), origOffsetY(offsetY),
 			pixelLength(length), pixelHeight(height), pixelBufferRawSize(length* height * sizeof(rgbaPixel)),
 			cudaKernel(nullptr), cudaThread(nullptr),
-			runCudaThread(false)
+			runCudaThread(false),
+			origScaleA(scaleA), origScaleB(scaleB)
 		{
 
 		}
@@ -115,7 +136,10 @@ namespace controller {
 		error_t create_cuda_thread(void)
 		{
 			assert(cudaKernel == nullptr);
-			this->cudaKernel = new cuda::cudaKernel(origOffsetX, origOffsetY, pixelLength, pixelHeight);
+			this->cudaKernel = new cuda::cudaKernel(
+				origOffsetX, origOffsetY, 
+				pixelLength, pixelHeight, 
+				origScaleA, origScaleB);
 
 			runCudaThread = true;
 			this->cudaThread = new std::thread(&cuda_render_thread, this);
