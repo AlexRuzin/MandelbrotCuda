@@ -75,6 +75,16 @@ namespace cuda {
 		{
 
 		}
+
+		double getOffsetX(void) const { return offsetX; }
+		double getOffsetY(void) const { return offsetY; }
+		double getScaleA(void) const { return scaleA; }
+		double getScaleB(void) const { return scaleB; }
+
+		void setOffsetX(double val) { offsetX = val; }
+		void setOffsetY(double val) { offsetY = val; }
+		void setScaleA(double val) { scaleA = val; }
+		void setScaleB(double val) { scaleB = val; }
 	};	
 }
 

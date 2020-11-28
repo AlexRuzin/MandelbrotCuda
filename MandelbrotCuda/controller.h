@@ -8,7 +8,7 @@
 #include <chrono>
 #include <assert.h>
 
-
+#include "main.h"
 #include "types.h"
 #include "cudaMandelbrot.h"
 #include "sdl_render.h"
@@ -75,18 +75,26 @@ namespace controller {
 		 */
 		friend static void cuda_render_thread(loopTimer *controller)
 		{
+			cuda::cudaKernel *kernel = controller->cudaKernel;
+
 			while(controller->runCudaThread) {
 				Sleep(10);
 
 #if defined(MEASURE_CUDA_EXECUTION_TIME)
 				auto t1 = std::chrono::high_resolution_clock::now();
 #endif //MEASURE_CUDA_EXECUTION_TIME
-				error_t err = controller->cudaKernel->generate_mandelbrot();
+
+				kernel->setScaleA(kernel->getScaleA() + DELTA_SCALEA);
+				kernel->setScaleB(kernel->getScaleB() + DELTA_SCALEB);
+				kernel->setOffsetX(kernel->getOffsetX() + DELTA_OFFSETX);
+				kernel->setOffsetY(kernel->getOffsetY() + DELTA_OFFSETY);
+
+				error_t err = kernel->generate_mandelbrot();
 				if (err != 0) {
 					DERROR("Error in generating CUDA kernel: " + std::to_string(err));
 				}				
 
-				rgbaPixel *pixelBuffer = controller->cudaKernel->get_pixel_buffer();
+				rgbaPixel *pixelBuffer = kernel->get_pixel_buffer();
 				assert(pixelBuffer != nullptr);
 
 				controller->renderer->write_static_frame(pixelBuffer, controller->pixelLength, controller->pixelHeight);

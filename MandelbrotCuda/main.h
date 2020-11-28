@@ -37,4 +37,10 @@
 #define IMAGE_SCALEA			1.0  //1.0
 #define IMAGE_SCALEB			4.0  //4.0
 
+// Scale and position delta
+#define DELTA_SCALEA			-0.001
+#define DELTA_SCALEB            0.002
+#define DELTA_OFFSETX			-0.0
+#define DELTA_OFFSETY			-0.0
+
 //EOF
