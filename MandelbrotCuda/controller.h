@@ -44,6 +44,10 @@ namespace controller {
 		std::thread *cudaThread;
 		bool runCudaThread;
 
+		// Test renderer (debug only)
+		std::thread *testFrameThread;
+		bool runTestFrameThread;
+
 	private:
 		rgbaPixel *generate_blank_frame(size_t pixelCount) const
 		{
@@ -58,7 +62,10 @@ namespace controller {
 			return out;
 		}
 
-		friend static void cuda_render_thread(loopTimer* controller)
+		/*
+		 * CUDA rendering thread (primary)
+		 */
+		friend static void cuda_render_thread(loopTimer *controller)
 		{
 			while(controller->runCudaThread) {
 				Sleep(1000);
@@ -71,6 +78,21 @@ namespace controller {
 				assert(pixelBuffer != nullptr);
 
 				controller->renderer->write_static_frame(pixelBuffer, controller->pixelLength, controller->pixelHeight);
+			}
+		}
+
+		/*
+		 * Static frame rendering thread (test)
+		 */
+#define STATIC_FRAME_RENDERING_WAIT_TIME 1 //ms
+		friend static void frame_render_thread(loopTimer *controller)
+		{
+			while (controller->testFrameThread) {
+				rgbaPixel *out = controller->generate_blank_frame(controller->pixelBufferRawSize);
+
+				controller->renderer->write_static_frame(out, controller->pixelLength, controller->pixelHeight);
+
+				std::this_thread::sleep_for(std::chrono::milliseconds(STATIC_FRAME_RENDERING_WAIT_TIME));
 			}
 		}
 
@@ -87,6 +109,9 @@ namespace controller {
 
 		}
 
+		/*
+		 * Creates the CUDA thread (default)
+		 */
 		error_t create_cuda_thread(void)
 		{
 			assert(cudaKernel == nullptr);
@@ -95,6 +120,18 @@ namespace controller {
 			runCudaThread = true;
 			this->cudaThread = new std::thread(&cuda_render_thread, this);
 			DINFO("Created CUDA rendering thread");
+
+			return 0;
+		}
+
+		/*
+		 * Creates the test thread
+		 */
+		error_t create_test_thread(void)
+		{
+			runTestFrameThread = true;
+			this->testFrameThread = new std::thread(frame_render_thread, this);
+			DINFO("Created TEST rendering thread");
 
 			return 0;
 		}
