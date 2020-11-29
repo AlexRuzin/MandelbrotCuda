@@ -103,7 +103,14 @@ namespace controller {
 				auto t2 = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 				const double cudaExecTime = std::chrono::duration<double>(duration).count();
-				controller->renderer->update_cuda_rendering_stats(render::cudaRenderingStats{ cudaExecTime });
+				render::cudaRenderingStats stats = {
+					std::chrono::duration<double>(duration).count(),
+					kernel->getOffsetX(),
+					kernel->getOffsetY(),
+					kernel->getScaleA(),
+					kernel->getScaleB()
+				};
+				controller->renderer->update_cuda_rendering_stats(stats);
 #endif //MEASURE_CUDA_EXECUTION_TIME
 			}
 		}

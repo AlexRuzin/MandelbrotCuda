@@ -3,6 +3,8 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
+#include <iomanip>
+#include <sstream>
 #include <string>       // std::string
 #include <iostream>     // std::cout
 #include <sstream>
@@ -205,6 +207,10 @@ error_t sdlBase::render_loop(sdlBase* b)
 	LTexture cudaStatsTexture(b->renderer);
 #endif //RENDER_CUDA_STATS
 
+#if defined(DISPLAY_KERNEL_PARAMETERS)
+	LTexture cudaPositionDetails(b->renderer);
+#endif //DISPLAY_KERNEL_PARAMETERS
+
 	// Primary frame texture
 	SDL_Texture* frameTexture = SDL_CreateTexture
 	(
@@ -237,13 +243,23 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 #if defined(RENDER_CUDA_STATS)
 		std::stringstream cudaStats;
-		cudaStats << "Last CUDA rendering time: " << b->cudaTimeElapsed.frameRenderElapsedms << " ms";
-		if (cudaStatsTexture.loadFromRenderedText(cudaStats.str().c_str(), textColor))
-		{
-			DERROR("render_loop: Failed to load CUDA stats texture");
+		cudaStats << "Last CUDA rendering time: " << b->cudaStats.frameRenderElapsedms << " ms";
+		if (cudaStatsTexture.loadFromRenderedText(cudaStats.str().c_str(), textColor)) {
+			DERROR("render_loop: Failed to load CUDA performance texture");
 			break;
 		}
 #endif //RENDER_CUDA_STATS
+
+#if defined(DISPLAY_KERNEL_PARAMETERS)
+		std::ostringstream cudaPositionStats;
+		cudaPositionStats << std::setprecision(20);
+		cudaPositionStats << "offsetX Delta: " <<
+			std::to_string(b->cudaStats.offsetX) << " offsetY Delta: " << std::to_string(b->cudaStats.offsetY) << std::endl;
+		if (cudaPositionDetails.loadFromRenderedText(cudaPositionStats.str().c_str(), textColor)) {
+			DERROR("render_loop: Failed to load CUDA stats texture");
+			break;
+		}
+#endif //DISPLAY_KERNEL_PARAMETERS
 
 		SDL_Event sdlEvent;
 		while (SDL_PollEvent(&sdlEvent) != 0) {
@@ -327,6 +343,10 @@ error_t sdlBase::render_loop(sdlBase* b)
 #if defined(RENDER_CUDA_STATS)
 		cudaStatsTexture.render(0, 30);
 #endif //RENDER_CUDA_STATS
+
+#if defined(DISPLAY_KERNEL_PARAMETERS)
+		cudaPositionDetails.render(0, 60);
+#endif //DISPLAY_KERNEL_PARAMETERS
 
 
 #if defined(RENDER_ENABLE_FPS_CAP)

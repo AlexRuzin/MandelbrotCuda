@@ -23,8 +23,16 @@
 #define RENDER_SHOW_FPS_STRING
 #endif //RENDER_ENABLE_FPS_CAP
 
-// Renders the CUDA time elapsed stats
+/*
+ * Renders the CUDA time elapsed stats
+ */
 #define RENDER_CUDA_STATS
+
+/*
+ * Displays kernel parameters
+ */
+#define DISPLAY_KERNEL_PARAMETERS
+
 
 #define COLOR_WHITE frame::rgbPixel{ 255, 255, 255 }
 
@@ -106,6 +114,8 @@ namespace render
 
 	typedef struct cudaRenderingStats {
 		double frameRenderElapsedms; // milliseconds
+		double offsetX, offsetY;
+		double scaleA, scaleB;
 	} CUDA_RENDERING_STATS, *PCUDA_RENDERING_STATS;
 
 	class sdlBase {
@@ -130,7 +140,7 @@ namespace render
 		std::thread *renderThread;
 
 		// Counter for the CUDA rendering
-		cudaRenderingStats cudaTimeElapsed;
+		cudaRenderingStats cudaStats;
 
 		// Frame counter
 	private:
@@ -163,7 +173,7 @@ namespace render
 
 		void update_cuda_rendering_stats(cudaRenderingStats stats)
 		{
-			cudaTimeElapsed = stats;
+			cudaStats = stats;
 		}
 
 
@@ -174,7 +184,7 @@ namespace render
 			doRender(false), renderThread(nullptr), 		
 			frameBuffer(nullptr), framePixelHeight(0), framePixelLength(0), refreshBuffer(false),
 			frameBufferLock(new std::mutex()),
-			cudaTimeElapsed(cudaRenderingStats{ 56666666555 }),
+			cudaStats(cudaRenderingStats{ 56666666555 }),
 #if defined(RENDER_ENABLE_FPS_CAP)
 			frameCount(0)
 #endif //RENDER_ENABLE_FPS_CAP

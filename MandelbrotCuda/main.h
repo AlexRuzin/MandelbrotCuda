@@ -28,7 +28,7 @@
 #define RENDER_WINDOW_HEIGHT    1024
 #define RENDER_WINDOW_LENGTH    1024
 
-#define FRACTAL_OFFSET_X        -0.6  // -0.6
+#define FRACTAL_OFFSET_X        -1.6  // -0.6
 #define FRACTAL_OFFSET_Y        0.0   // 0.0
 
 #define DEBUG_LOG_FILE          "debug.log"
