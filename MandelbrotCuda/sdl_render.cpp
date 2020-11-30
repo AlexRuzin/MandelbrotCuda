@@ -252,9 +252,11 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 #if defined(DISPLAY_KERNEL_PARAMETERS)
 		std::ostringstream cudaPositionStats;
-		cudaPositionStats << std::setprecision(20);
-		cudaPositionStats << "offsetX Delta: " <<
-			std::to_string(b->cudaStats.offsetX) << " offsetY Delta: " << std::to_string(b->cudaStats.offsetY) << std::endl;
+		cudaPositionStats << std::fixed;
+		cudaPositionStats << "offsetX Delta: " << std::to_string(b->cudaStats.offsetX) << std::endl << 
+			"offsetY Delta: " << std::to_string(b->cudaStats.offsetY) << std::endl;
+		cudaPositionStats << "SCALEA: " << std::to_string(b->cudaStats.scaleA) << std::endl << 
+			"SCALEB: " << std::to_string(b->cudaStats.scaleB) << std::endl;
 		if (cudaPositionDetails.loadFromRenderedText(cudaPositionStats.str().c_str(), textColor)) {
 			DERROR("render_loop: Failed to load CUDA stats texture");
 			break;
@@ -274,7 +276,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 				case SDLK_ESCAPE:
 					DINFO("Renderer has received user input quit signal");
 					b->doRender = false;
-					break;
+					std::exit(0);
 				}
 				break;
 			case SDL_WINDOWEVENT:
