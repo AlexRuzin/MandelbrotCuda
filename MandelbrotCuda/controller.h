@@ -77,15 +77,15 @@ namespace controller {
 		{
 			cuda::cudaKernel *kernel = controller->cudaKernel;
 
-			double lastSCALEA = 0.000555;
+			double lastSCALEA = 0.0000555;
 			while(controller->runCudaThread) {
-				Sleep(10);
+				Sleep(1);
 
 #if defined(MEASURE_CUDA_EXECUTION_TIME)
 				auto t1 = std::chrono::high_resolution_clock::now();
 #endif //MEASURE_CUDA_EXECUTION_TIME
 				//kernel->setScaleA(kernel->getScaleA() + controller->process_scale(kernel->getScaleA(), 0.0));
-				double newSCALEA = -0.5 * kernel->getScaleA() * std::exp(-2.9 * lastSCALEA);
+				double newSCALEA = -0.5 * kernel->getScaleA() * std::exp(-2.5 * lastSCALEA);
 				kernel->setScaleA(kernel->getScaleA() + newSCALEA);
 				kernel->setScaleB(kernel->getScaleB());
 				lastSCALEA -= newSCALEA;

@@ -22,16 +22,16 @@
 // Defines
 #define FRAME_BUFFER_HEIGHT			2048 //10000
 #define FRAME_BUFFER_LENGTH			2048 //10000
-#define WINDOW_NAME					"v0.1"
+#define WINDOW_NAME					"v0.2"
 
 // Defines the size of the render window
 #define RENDER_WINDOW_HEIGHT		1300
 #define RENDER_WINDOW_LENGTH		2500
 
 // Max CUDA iteratations of mandelbrot
-#define CUDA_MANDELBROT_INTERATIONS 512
+#define CUDA_MANDELBROT_INTERATIONS 255
 
-#define FRACTAL_OFFSET_X			-1.4312  // -0.6
+#define FRACTAL_OFFSET_X			-1.41645612  // -0.6
 #define FRACTAL_OFFSET_Y			0.0   // 0.0
 	
 #define DEBUG_LOG_FILE				"debug.log"

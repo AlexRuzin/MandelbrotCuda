@@ -192,7 +192,7 @@ __global__ void mandelbrot_kernel(rgbaPixel *image,
 		return;
 	}
 
-	const std::uint8_t max_iter = CUDA_MANDELBROT_INTERATIONS;
+	const std::uint32_t max_iter = CUDA_MANDELBROT_INTERATIONS;
 	const double y = ((double)i - (double)(height >> 1)) * scale + cy;
 	const double x = ((double)j - (double)(width >> 1)) * scale + cx;
 
@@ -203,7 +203,7 @@ __global__ void mandelbrot_kernel(rgbaPixel *image,
 		return;
 	}
 
-	std::uint8_t iter = 0;
+	std::uint32_t iter = 0;
 	double zy, zx2, zy2;
 	zx = zy = zx2 = zy2 = 0.0;
 

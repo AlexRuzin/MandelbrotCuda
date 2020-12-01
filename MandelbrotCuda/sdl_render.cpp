@@ -318,6 +318,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 		SDL_RenderClear(renderer);
 
 		// Draw raw frame buffer
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
 		frameBufferLock->lock();
 		if (refreshBuffer) {
 			unsigned char* lockedPixels = nullptr;
