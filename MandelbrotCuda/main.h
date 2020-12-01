@@ -29,7 +29,7 @@
 #define RENDER_WINDOW_LENGTH		2500
 
 // Max CUDA iteratations of mandelbrot
-#define CUDA_MANDELBROT_INTERATIONS 255
+#define CUDA_MANDELBROT_INTERATIONS 511
 
 #define FRACTAL_OFFSET_X			-1.41645612  // -0.6
 #define FRACTAL_OFFSET_Y			0.0   // 0.0

@@ -41,6 +41,8 @@ inline void cudaAssert(cudaError_t status, const char* file, const char* func, i
 	}
 }
 
+int get_thread_compute_capability(int major, int minor);
+
 __constant__ rgbaPixel pixel_colour[16] =
 {
 	{ 66,  30,  15 },
@@ -74,27 +76,16 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 	cudaCall(cudaGetDevice, &device);
 	cudaCall(cudaGetDeviceProperties, &props, device);
 
-	int threadBlocks;
-	if (props.major == 2)
-	{
-		threadBlocks = 8;
-	}
-	else if (props.major == 3)
-	{
-		threadBlocks = 16;
-	}
-	else
-	{
-		threadBlocks = 32;
-	}
-
-	threadBlocks = 8;
+	int threadBlocks = get_thread_compute_capability(props.major, props.minor);
 
 	int blockSize;
 	std::uint32_t minGridSize;
 	cudaOccupancyMaxPotentialBlockSize((int*)&minGridSize, &blockSize, kernel, 0, 0);
 	
+	
 	int maxActiveBlocks = 0;
+
+	/*
 	do
 	{
 		cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, kernel, blockSize, 0);
@@ -106,6 +97,7 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 
 		blockSize -= props.warpSize;
 	} while (true);	
+	*/
 
 	int blockSizeDimX, blockSizeDimY;
 	blockSizeDimX = blockSizeDimY = (int)pow(2, ceil(log(sqrt(blockSize)) / log(2)));
@@ -148,6 +140,53 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 	cudaCall(cudaEventDestroy, stop);
 
 	cudaCall(cudaProfilerStop);
+
+	return 0;
+}
+
+int get_thread_compute_capability(int major, int minor)
+{
+	switch (major) {
+	case 1:
+		return 0;
+	case 2:
+	case 3:
+		switch (minor) {
+		case 0:
+			return 16;
+		case 2:
+			return 4;
+		case 5:
+		case 7:
+			return 32;
+		default:
+			return 0;
+		}
+	case 5:
+		switch (minor) {
+		case 0:
+		case 2:
+			return 32;
+		case 3:
+			return 16;
+		}
+	case 6:
+		switch (minor) {
+		case 0:
+			return 128;
+		case 1:
+			return 32;
+		case 2:
+			return 16;
+		default:
+			return 0;
+		}
+	case 7:
+		if (minor == 2) return 16;
+		return 128;
+	default:
+		return 0;
+	}
 
 	return 0;
 }
