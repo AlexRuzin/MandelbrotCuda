@@ -1,5 +1,6 @@
 #include "cudaMandelbrot.h"
 #include "debug.h"
+#include "main.h"
 
 #include "cuda_occupancy.h"
 #include "cuda_runtime.h"
@@ -9,8 +10,6 @@
 #include <string>       // std::string
 #include <iostream>     // std::cout
 #include <sstream>      // std::stringstream
-
-#define CUDA_MANDELBROT_INTERATIONS 511
 
 float elapsedTime = 0;
 
