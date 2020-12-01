@@ -28,14 +28,14 @@
 #define RENDER_WINDOW_HEIGHT    1300
 #define RENDER_WINDOW_LENGTH    2500
 
-#define FRACTAL_OFFSET_X        -1.6  // -0.6
+#define FRACTAL_OFFSET_X        -1.5112  // -0.6
 #define FRACTAL_OFFSET_Y        0.0   // 0.0
 
 #define DEBUG_LOG_FILE          "debug.log"
 
 // CUDA scale parameter
 #define IMAGE_SCALEA			0.9  //1.0
-#define IMAGE_SCALEB			4.0  //4.0
+#define IMAGE_SCALEB			1.0  //4.0
 
 // Scale and position delta
 #define DELTA_SCALEA			0.001

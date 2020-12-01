@@ -21,6 +21,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <vector>
+#include <string>       // std::string
+#include <iostream>     // std::cout
+#include <sstream>
+#include <iomanip>
 
 int WINAPI WinMain(HINSTANCE hinstance,
     HINSTANCE hprevinstance,
@@ -29,6 +33,14 @@ int WINAPI WinMain(HINSTANCE hinstance,
 { 
     error_t err = 0;
     DINFO("Starting application");
+
+
+    std::stringstream testSS(std::stringstream::in | std::stringstream::out);
+    double testDouble = 0.000000000000000534;
+    //OutputDebugStringA(to_string_with_precision(testDouble, 64).c_str());
+
+
+
 
 #if defined(TEST_MANDELBROT_CPU_PPM)
     mandelbrotFractalCpu mFrac(34, WINDOW_LENGTH, WINDOW_HEIGHT);

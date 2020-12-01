@@ -4,7 +4,6 @@
 #include <SDL2/SDL_ttf.h>
 
 #include <iomanip>
-#include <sstream>
 #include <string>       // std::string
 #include <iostream>     // std::cout
 #include <sstream>
@@ -19,6 +18,15 @@
 #include "debug.h"
 
 using namespace render;
+
+template <typename T>
+std::string to_string_with_precision(const T a_value, const int n = 6)
+{
+	std::ostringstream out;
+	out.precision(n);
+	out << std::fixed << a_value;
+	return out.str();
+}
 
 /*
  * sdlTimer 
@@ -251,12 +259,13 @@ error_t sdlBase::render_loop(sdlBase* b)
 #endif //RENDER_CUDA_STATS
 
 #if defined(DISPLAY_KERNEL_PARAMETERS)
-		std::ostringstream cudaPositionStats;
+		std::stringstream cudaPositionStats(std::stringstream::in | std::stringstream::out);
 		cudaPositionStats << std::fixed;
-		cudaPositionStats << "offsetX Delta: " << std::to_string(b->cudaStats.offsetX) << std::endl << 
-			"offsetY Delta: " << std::to_string(b->cudaStats.offsetY) << std::endl;
-		cudaPositionStats << "SCALEA: " << std::to_string(b->cudaStats.scaleA) << std::endl << 
-			"SCALEB: " << std::to_string(b->cudaStats.scaleB) << std::endl;
+		cudaPositionStats << "SCALEA: " << to_string_with_precision(b->cudaStats.scaleA, 32) <<
+			" || Scale Delta: " << 
+			to_string_with_precision(b->cudaStats.scaleA / ((double)b->framePixelLength / b->cudaStats.scaleB), 32);
+
+
 		if (cudaPositionDetails.loadFromRenderedText(cudaPositionStats.str().c_str(), textColor)) {
 			DERROR("render_loop: Failed to load CUDA stats texture");
 			break;

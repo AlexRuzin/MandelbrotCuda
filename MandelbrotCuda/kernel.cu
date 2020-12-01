@@ -10,7 +10,7 @@
 #include <iostream>     // std::cout
 #include <sstream>      // std::stringstream
 
-#define CUDA_MANDELBROT_INTERATIONS 255
+#define CUDA_MANDELBROT_INTERATIONS 511
 
 float elapsedTime = 0;
 
@@ -160,7 +160,7 @@ error_t cudaKernel::generate_mandelbrot(void)
 	cudaCall(cudaMalloc, (void**)&cudaBuffer, pixelBufferRawSize);
 	cudaCall(cudaMemset, cudaBuffer, 0x0, pixelBufferRawSize);
 
-	scale = scaleA / (pixelLength / scaleB);
+	scale = scaleA / ((double)pixelLength / scaleB);
 	error_t err = launch_kernel(mandelbrot_kernel,
 		dim3((int32_t)pixelLength, (int32_t)pixelHeight), 
 		cudaBuffer,

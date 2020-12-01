@@ -77,7 +77,7 @@ namespace controller {
 		{
 			cuda::cudaKernel *kernel = controller->cudaKernel;
 
-			double lastSCALEA = 1.12;
+			double lastSCALEA = 0.0099999;
 			while(controller->runCudaThread) {
 				Sleep(10);
 
@@ -85,10 +85,10 @@ namespace controller {
 				auto t1 = std::chrono::high_resolution_clock::now();
 #endif //MEASURE_CUDA_EXECUTION_TIME
 				//kernel->setScaleA(kernel->getScaleA() + controller->process_scale(kernel->getScaleA(), 0.0));
-				double newSCALEA = 1.0 * std::exp(-2.2 * lastSCALEA);
-				kernel->setScaleA(kernel->getScaleA() - newSCALEA);
+				double newSCALEA = -0.5 * kernel->getScaleA() * std::exp(-3.1 * lastSCALEA);
+				kernel->setScaleA(kernel->getScaleA() + newSCALEA);
+				kernel->setScaleB(kernel->getScaleB() + newSCALEA);
 				lastSCALEA -= newSCALEA;
-				kernel->setScaleB(kernel->getScaleB() + DELTA_SCALEB);
 				kernel->setOffsetX(kernel->getOffsetX() + DELTA_OFFSETX);
 				kernel->setOffsetY(kernel->getOffsetY() + DELTA_OFFSETY);
 
@@ -120,7 +120,7 @@ namespace controller {
 
 		/*
 		 * Process scale function
-		 *  f(x) = e^(-k(x+c))
+		 *  f(x) = Ae^(-k(x+c))
 		 */
 		static double process_scale(double in, double delta_scale)
 		{
