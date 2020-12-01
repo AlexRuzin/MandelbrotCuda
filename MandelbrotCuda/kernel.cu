@@ -84,6 +84,7 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 	
 	
 	int maxActiveBlocks = 0;
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, kernel, blockSize, 0);
 
 	/*
 	do
@@ -112,12 +113,13 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 	grid.x = grid.x > minGridSize ? grid.x : minGridSize;
 	grid.y = grid.y > minGridSize ? grid.y : minGridSize;
 
+#define CUDA_DEBUG_OUT
 #ifdef CUDA_DEBUG_OUT
 	float occupancy = (maxActiveBlocks * blockSize / props.warpSize) / (float)(props.maxThreadsPerMultiProcessor / props.warpSize);
 
-	std::cout << "Grid of size " << grid.x * grid.y << std::endl;
-	std::cout << "Launched blocks of size " << blockSize << std::endl;
-	std::cout << "Theoretical occupancy " << occupancy * 100.0f << "%" << std::endl;
+	DINFO("Grid of size: " + std::to_string(grid.x * grid.y));
+	DINFO("Launched blocks of size " + std::to_string(blockSize));
+	DINFO("Theoretical occupancy " + std::to_string(occupancy * 100.0f) + "%");
 #endif //CUDA_DEBUG_OUT
 
 	cudaEvent_t start;
