@@ -113,7 +113,7 @@ error_t cudaKernel::launch_kernel(T& kernel, dim3 work, A&&... args)
 	grid.x = grid.x > minGridSize ? grid.x : minGridSize;
 	grid.y = grid.y > minGridSize ? grid.y : minGridSize;
 
-#define CUDA_DEBUG_OUT
+#undef CUDA_DEBUG_OUT
 #ifdef CUDA_DEBUG_OUT
 	float occupancy = (maxActiveBlocks * blockSize / props.warpSize) / (float)(props.maxThreadsPerMultiProcessor / props.warpSize);
 

@@ -7,11 +7,13 @@
 #include <mutex>
 #include <assert.h>
 #include <chrono>
+#include <string>
+#include <vector>
 
 #include "types.h"
 
 #define FPS_COUNTER_FONT_TYPE		"C:\\Windows\\Fonts\\Arial.ttf"
-#define FPS_COUNTER_FONT_SIZE		28
+#define FPS_COUNTER_FONT_SIZE		20
 
 /*
  * Configuration for SDL2 rendering engine
@@ -203,6 +205,71 @@ namespace render
 			}
 
 			SDL_Quit();
+		}
+	};
+
+	/*
+	 * Stats class
+	 */
+#define SCREEN_STATS(x) screenStats.append((std::string)x)
+	class renderLines {
+	private:
+		const uint32_t verticalOffset;
+
+		SDL_Renderer *renderer;
+		SDL_Color color;
+
+		std::vector<std::string> lineArray;
+		std::vector<LTexture *> lineTextures;
+
+	public:
+		renderLines(std::string initString, __inout SDL_Renderer *renderEngine, SDL_Color color) :
+			verticalOffset(30),
+			color(color),
+			renderer(renderEngine)
+		{
+			this->append(initString);
+		}
+
+		void append(std::string input)
+		{
+			lineArray.push_back(input);
+			lineTextures.push_back(new LTexture(renderer));
+			lineTextures.back()->loadFromRenderedText(lineArray.back().c_str(), color);
+		}
+
+		void append(std::string input, SDL_Color colorOverride)
+		{
+			lineArray.push_back(input);
+			lineTextures.push_back(new LTexture(renderer));
+			lineTextures.back()->loadFromRenderedText(lineArray.back().c_str(), colorOverride);
+		}
+
+		void change_color(SDL_Color newColor) { color = newColor; }
+
+		/*
+		std::ostream &operator<<(std::ostream &out, const std::string &towrite) {
+		{
+			this->lineArray.push_back(towrite);
+			lineTextures.push_back(LTexture(renderer));
+			lineTextures.back().loadFromRenderedText(lineArray.back().c_str(), color);
+			return out;
+		}
+		*/
+
+		void render(void)
+		{
+			uint32_t offset = 0;
+			for (std::vector<LTexture *>::iterator i = lineTextures.begin(); i != lineTextures.end(); ++i) {
+				(*i)->render(0, offset);
+				offset += verticalOffset;
+			}
+		}
+
+		void clear(void) 
+		{
+			lineArray.clear();
+			lineTextures.clear();
 		}
 	};
 }

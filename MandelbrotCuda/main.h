@@ -25,8 +25,8 @@
 #define WINDOW_NAME					"v0.2"
 
 // Defines the size of the render window
-#define RENDER_WINDOW_HEIGHT		1300
-#define RENDER_WINDOW_LENGTH		2500
+#define RENDER_WINDOW_HEIGHT		1100
+#define RENDER_WINDOW_LENGTH		1400
 
 // Max CUDA iteratations of mandelbrot
 #define CUDA_MANDELBROT_INTERATIONS 255

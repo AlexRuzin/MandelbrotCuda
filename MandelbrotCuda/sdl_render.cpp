@@ -204,20 +204,12 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 	SDL_Color textColor = { 255, 255, 255, 255 };
 
+	render::renderLines screenStats("Mandelbrot Fractal v0.2", b->renderer, textColor);
+
 #if defined(RENDER_ENABLE_FPS_CAP)
 	b->fpsTimer.start();
 	uint32_t countedFrames = 0;
-	std::stringstream timeText;
-	LTexture fpsTexture(b->renderer);
 #endif //RENDER_ENABLE_FPS_CAP
-
-#if defined(RENDER_CUDA_STATS)
-	LTexture cudaStatsTexture(b->renderer);
-#endif //RENDER_CUDA_STATS
-
-#if defined(DISPLAY_KERNEL_PARAMETERS)
-	LTexture cudaPositionDetails(b->renderer);
-#endif //DISPLAY_KERNEL_PARAMETERS
 
 	// Primary frame texture
 	SDL_Texture* frameTexture = SDL_CreateTexture
@@ -238,38 +230,17 @@ error_t sdlBase::render_loop(sdlBase* b)
 		{
 			avgFPS = 0;
 		}
-
-		timeText.str("");
-		timeText << "FPS Limit: " << RENDER_FPS_CAP << " Average: " << avgFPS;
-
-		if (fpsTexture.loadFromRenderedText(timeText.str().c_str(), textColor))
-		{
-			DERROR("render_loop: Failed to load rendered text");
-			break;
-		}
+		SCREEN_STATS("FPS Limit: " + std::to_string(RENDER_FPS_CAP) + " Average: " + std::to_string(avgFPS));
 #endif //RENDER_ENABLE_FPS_CAP
 
 #if defined(RENDER_CUDA_STATS)
-		std::stringstream cudaStats;
-		cudaStats << "Last CUDA rendering time: " << b->cudaStats.frameRenderElapsedms << " ms";
-		if (cudaStatsTexture.loadFromRenderedText(cudaStats.str().c_str(), textColor)) {
-			DERROR("render_loop: Failed to load CUDA performance texture");
-			break;
-		}
+		SCREEN_STATS("Last CUDA rendering time: " + std::to_string(b->cudaStats.frameRenderElapsedms) + " ms");
 #endif //RENDER_CUDA_STATS
 
 #if defined(DISPLAY_KERNEL_PARAMETERS)
-		std::stringstream cudaPositionStats(std::stringstream::in | std::stringstream::out);
-		cudaPositionStats << std::fixed;
-		cudaPositionStats << "SCALEA: " << to_string_with_precision(b->cudaStats.scaleA, 32) <<
-			" || Scale Delta: " << 
-			to_string_with_precision(b->cudaStats.scaleA / ((double)b->framePixelLength / b->cudaStats.scaleB), 32);
-
-
-		if (cudaPositionDetails.loadFromRenderedText(cudaPositionStats.str().c_str(), textColor)) {
-			DERROR("render_loop: Failed to load CUDA stats texture");
-			break;
-		}
+		SCREEN_STATS("SCALE Alpha: " + to_string_with_precision(b->cudaStats.scaleA, 32));
+		SCREEN_STATS("Scale Delta: " +
+			to_string_with_precision(b->cudaStats.scaleA / ((double)b->framePixelLength / b->cudaStats.scaleB), 32));
 #endif //DISPLAY_KERNEL_PARAMETERS
 
 		SDL_Event sdlEvent;
@@ -351,25 +322,19 @@ error_t sdlBase::render_loop(sdlBase* b)
 		// Copy frame image into renderer
 		SDL_RenderCopy(renderer, frameTexture, NULL, NULL);
 
-
-#if defined(RENDER_CUDA_STATS)
-		cudaStatsTexture.render(0, 30);
-#endif //RENDER_CUDA_STATS
-
-#if defined(DISPLAY_KERNEL_PARAMETERS)
-		cudaPositionDetails.render(0, 60);
-#endif //DISPLAY_KERNEL_PARAMETERS
-
+		// Render on-screen stats
+		screenStats.render();
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 #if defined(RENDER_SHOW_FPS_STRING)
 		//texture.render((b->windowWidth - texture.getWidth()) / 2, (b->windowHeight - texture.getHeight()) / 2);
-		fpsTexture.render(0, 0);
 		countedFrames++;
 #endif //RENDER_SHOW_FPS_STRING
 #endif //RENDER_ENABLE_FPS_CAP
 
 		SDL_RenderPresent(b->renderer);
+
+		screenStats.clear();
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 		uint32_t frameTicks = b->capTimer.getTicks();
