@@ -288,8 +288,9 @@ error_t sdlBase::render_loop(sdlBase* b)
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 		SDL_RenderClear(renderer);
 
-		// Draw raw frame buffer
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
+
+		// Draw raw frame buffer
 		frameBufferLock->lock();
 		if (refreshBuffer) {
 			unsigned char* lockedPixels = nullptr;
