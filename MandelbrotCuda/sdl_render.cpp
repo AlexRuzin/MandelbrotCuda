@@ -239,7 +239,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 #if defined(DISPLAY_KERNEL_PARAMETERS)
 		SCREEN_STATS("SCALE Alpha: " + to_string_with_precision(b->cudaStats.scaleA, 32));
-		SCREEN_STATS("Scale Delta: " +
+		SCREEN_STATS("SCALE Delta: " +
 			to_string_with_precision(b->cudaStats.scaleA / ((double)b->framePixelLength / b->cudaStats.scaleB), 32));
 #endif //DISPLAY_KERNEL_PARAMETERS
 

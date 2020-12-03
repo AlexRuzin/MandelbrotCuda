@@ -77,9 +77,9 @@ namespace controller {
 		{
 			cuda::cudaKernel *kernel = controller->cudaKernel;
 
-			double lastSCALEA = 0.0000555;
+			double lastSCALEA = 0.0000055;
 			while(controller->runCudaThread) {
-				Sleep(1);
+				Sleep(10);
 
 #if defined(MEASURE_CUDA_EXECUTION_TIME)
 				auto t1 = std::chrono::high_resolution_clock::now();
