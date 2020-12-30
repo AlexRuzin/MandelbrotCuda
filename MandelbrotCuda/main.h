@@ -46,4 +46,7 @@
 #define DELTA_OFFSETX				-0.0
 #define DELTA_OFFSETY				-0.0
 
+// Loop delay for cuda_render_thread (controller auto-render loop) -- in milliseconds
+#define CONTROLLER_LOOP_WAIT		10
+
 //EOF

@@ -272,25 +272,6 @@ namespace render
 			lineTextures.clear();
 		}
 	};
-
-	/*
-	 * User input class
-	 */
-	class userInput : public sdlBase {
-	private:
-
-
-	public:
-		userInput() 
-		{
-
-		}
-
-		~userInput()
-		{
-
-		}
-	};
 }
 
 //EOF

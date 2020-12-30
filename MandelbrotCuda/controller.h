@@ -30,6 +30,13 @@ using random_bytes_engine = std::independent_bits_engine<std::default_random_eng
 namespace controller {
 	class loopTimer {
 	private:
+		// States for the rendering thread
+		typedef enum {
+			THREAD_STATE_TERMINATED,
+			THREAD_STATE_RUNNING,
+			THREAD_STATE_PAUSED,
+		} thread_state;
+
 		// Inputs 
 		const double origOffsetX, origOffsetY;
 		const double origScaleA, origScaleB;
@@ -50,7 +57,7 @@ namespace controller {
 		// CUDA renderer
 		cuda::cudaKernel *cudaKernel;
 		std::thread *cudaThread;
-		bool runCudaThread;
+		thread_state threadStateCuda;
 
 		// Test renderer (debug only)
 		std::thread *testFrameThread;
@@ -78,8 +85,9 @@ namespace controller {
 			cuda::cudaKernel *kernel = controller->cudaKernel;
 
 			double lastSCALEA = 0.0000055;
-			while(controller->runCudaThread) {
-				Sleep(10);
+			DINFO("Setting render thread to THREAD_STATE_RUNNING");
+			while(controller->threadStateCuda == THREAD_STATE_RUNNING) {
+				Sleep(CONTROLLER_LOOP_WAIT);
 
 #if defined(MEASURE_CUDA_EXECUTION_TIME)
 				auto t1 = std::chrono::high_resolution_clock::now();
@@ -116,6 +124,7 @@ namespace controller {
 				controller->renderer->update_cuda_rendering_stats(stats);
 #endif //MEASURE_CUDA_EXECUTION_TIME
 			}
+			DINFO("Terminating CUDA thread");
 		}
 
 		/*
@@ -152,7 +161,7 @@ namespace controller {
 			origOffsetX(offsetX), origOffsetY(offsetY),
 			pixelLength(length), pixelHeight(height), pixelBufferRawSize(length* height * sizeof(rgbaPixel)),
 			cudaKernel(nullptr), cudaThread(nullptr),
-			runCudaThread(false),
+			threadStateCuda(THREAD_STATE_TERMINATED),
 			origScaleA(scaleA), origScaleB(scaleB)
 		{
 
@@ -169,9 +178,21 @@ namespace controller {
 				pixelLength, pixelHeight, 
 				origScaleA, origScaleB);
 
-			runCudaThread = true;
+			threadStateCuda = THREAD_STATE_RUNNING;
 			this->cudaThread = new std::thread(&cuda_render_thread, this);
 			DINFO("Created CUDA rendering thread");
+
+			return 0;
+		}
+
+		/*
+		 * Pauses the CUDA rendering thread
+		 *  The last rendered frame buffer will be stored
+		 */
+		error_t pause_cuda_thread(void)
+		{
+			assert(threadStateCuda == THREAD_STATE_RUNNING);
+
 
 			return 0;
 		}
@@ -190,8 +211,8 @@ namespace controller {
 
 		void stop_cuda_thread(void)
 		{
-			assert(runCudaThread == true);
-			runCudaThread = false;
+			assert(threadStateCuda == THREAD_STATE_RUNNING || threadStateCuda == THREAD_STATE_PAUSED);
+			threadStateCuda = THREAD_STATE_TERMINATED;
 		}
 
 		error_t init_sdl2_renderer(const std::string windowName)
