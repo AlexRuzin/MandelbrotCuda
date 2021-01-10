@@ -13,6 +13,7 @@
 #include "cudaMandelbrot.h"
 #include "sdl_render.h"
 #include "debug.h"
+#include "user_io.h"
 
 #define DEFAULT_WINDOW_NAME "sdl_window"
 
@@ -62,6 +63,9 @@ namespace controller {
 		// Test renderer (debug only)
 		std::thread *testFrameThread;
 		bool runTestFrameThread;
+
+		// User input object
+		user_io::io io;
 
 	private:
 		rgbaPixel *generate_blank_frame(size_t pixelCount) const
