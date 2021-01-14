@@ -15,6 +15,7 @@
 #include <assert.h>
 
 #include "sdl_render.h"
+#include "controller.h"
 #include "debug.h"
 
 using namespace render;

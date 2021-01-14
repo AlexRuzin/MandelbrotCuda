@@ -92,6 +92,7 @@
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="controller.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="sdl_render.cpp" />
   </ItemGroup>
