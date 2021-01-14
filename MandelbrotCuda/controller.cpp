@@ -38,10 +38,24 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 		auto t1 = std::chrono::high_resolution_clock::now();
 #endif //MEASURE_CUDA_EXECUTION_TIME
 		//kernel->setScaleA(kernel->getScaleA() + controller->process_scale(kernel->getScaleA(), 0.0));
-		double newSCALEA = -0.5 * kernel->getScaleA() * std::exp(-2.5 * lastSCALEA);
+
+		double newSCALEA = 0.0;
+		switch (controller->user_io_state) {
+		case SET_ZOOM_PAUSE:
+			break; // Perform no zoom
+		case SET_ZOOM_REVERSE:
+			newSCALEA = 0.5 * kernel->getScaleA() * std::exp(-2.5 * lastSCALEA);
+			break;
+		case SET_ZOOM_RESUME:
+			newSCALEA = -0.5 * kernel->getScaleA() * std::exp(-2.5 * lastSCALEA);
+		}
+
+		// Sec scaling
 		kernel->setScaleA(kernel->getScaleA() + newSCALEA);
 		kernel->setScaleB(kernel->getScaleB());
 		lastSCALEA -= newSCALEA;
+
+		// Manual parameters defined in main.h
 		kernel->setOffsetX(kernel->getOffsetX() + DELTA_OFFSETX);
 		kernel->setOffsetY(kernel->getOffsetY() + DELTA_OFFSETY);
 
@@ -81,6 +95,13 @@ void loopTimer::frame_render_thread(loopTimer *controller)
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(STATIC_FRAME_RENDERING_WAIT_TIME));
 	}
+}
+
+void loopTimer::set_user_io_state(USER_IO_STATE state)
+{
+	user_io_state = state;
+
+	return;
 }
 
 error_t loopTimer::create_cuda_thread(void)
@@ -123,6 +144,10 @@ error_t loopTimer::init_sdl2_renderer(const std::string windowName)
 {
 	windowName != "" ? sdlWindowTitle = windowName : sdlWindowTitle = DEFAULT_WINDOW_NAME;
 	renderer = new render::sdlBase(pixelHeight, pixelLength, sdlWindowTitle);
+
+	// Set the controller type for user I/O
+	renderer->set_controller_obj((void *)this);
+
 	error_t err = renderer->init_window();
 	if (err != 0) {
 		DERROR("Failed to initialize SDL2 window");

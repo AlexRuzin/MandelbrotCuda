@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 
+#include <random>
 #include <thread>
 #include <string>
 #include <chrono>
@@ -21,9 +22,17 @@
 
 // prng
 // https://stackoverflow.com/questions/25298585/efficiently-generating-random-bytes-of-data-in-c11-14
-//using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char>;
+using random_bytes_engine = std::independent_bits_engine<std::default_random_engine, CHAR_BIT, unsigned char>;
 
 namespace controller {
+
+	// Sets the zoom to start, stop, or reverse
+	typedef enum {
+		SET_ZOOM_PAUSE,
+		SET_ZOOM_REVERSE,
+		SET_ZOOM_RESUME
+	} USER_IO_STATE;
+
 	class loopTimer {
 	private:
 		// States for the rendering thread
@@ -55,6 +64,9 @@ namespace controller {
 		// Test renderer (debug only)
 		std::thread *testFrameThread;
 		bool runTestFrameThread;
+
+		// Controls the zoom on/off
+		USER_IO_STATE user_io_state = SET_ZOOM_RESUME;
 
 	private:
 		rgbaPixel *generate_blank_frame(size_t pixelCount) const;
@@ -90,7 +102,8 @@ namespace controller {
 			pixelLength(length), pixelHeight(height), pixelBufferRawSize(length* height * sizeof(rgbaPixel)),
 			cudaKernel(nullptr), cudaThread(nullptr),
 			threadStateCuda(THREAD_STATE_TERMINATED),
-			origScaleA(scaleA), origScaleB(scaleB)
+			origScaleA(scaleA), origScaleB(scaleB),
+			user_io_state(SET_ZOOM_RESUME)
 		{
 
 		}
@@ -126,10 +139,7 @@ namespace controller {
 		 * User I/O
 		 *  This will pause automatic zoom of the fractal object through input by SDL2
 		 */
-		typedef enum {
-			SET_ZOOM_PAUSE,
-			SET_ZOOM_RESUME
-		} IO_STATE;
+		void set_user_io_state(USER_IO_STATE state);
 	};
 }
 

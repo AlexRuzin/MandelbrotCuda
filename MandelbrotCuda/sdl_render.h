@@ -195,6 +195,9 @@ namespace render
 			assert(TTF_Init() == 0);
 		}
 
+		// Sets the controller object as a void * to prevent cyclic header redundancy
+		void set_controller_obj(__inout void *ptr) const;
+
 		~sdlBase()
 		{
 			if (renderer != nullptr) {

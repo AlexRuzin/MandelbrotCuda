@@ -20,6 +20,8 @@
 
 using namespace render;
 
+static controller::loopTimer *controllerPtr = nullptr;
+
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n = 6)
 {
@@ -254,6 +256,15 @@ error_t sdlBase::render_loop(sdlBase* b)
 			case SDL_KEYDOWN:
 				DINFO("Keystroke detected");
 				switch (sdlEvent.key.keysym.sym) {
+				case SDLK_1: // Run/resume
+					controllerPtr->set_user_io_state(controller::SET_ZOOM_RESUME);
+					break;
+				case SDLK_2:
+					controllerPtr->set_user_io_state(controller::SET_ZOOM_PAUSE);
+					break;
+				case SDLK_3:
+					controllerPtr->set_user_io_state(controller::SET_ZOOM_REVERSE);
+					break;
 				case SDLK_ESCAPE:
 					DINFO("Renderer has received user input quit signal");
 					b->doRender = false;
@@ -386,6 +397,11 @@ error_t sdlBase::init_window(void)
 	}
 
 	return 0;
+}
+
+void sdlBase::set_controller_obj(__inout void *ptr) const
+{
+	controllerPtr = (controller::loopTimer *)ptr;
 }
 
 //EOF
