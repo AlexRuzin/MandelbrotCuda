@@ -90,7 +90,6 @@
     <ClInclude Include="ppm.h" />
     <ClInclude Include="sdl_render.h" />
     <ClInclude Include="types.h" />
-    <ClInclude Include="user_io.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="debug.cpp" />
