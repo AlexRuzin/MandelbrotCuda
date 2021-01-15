@@ -35,6 +35,7 @@ std::string to_string_with_precision(const T a_value, const int n = 6)
 /*
  * sdlTimer 
  */
+#if defined(RENDER_ENABLE_FPS_CAP)
 void sdlTimer::start(void)
 {
 	mStarted = true;
@@ -89,6 +90,7 @@ void sdlTimer::reset(void)
 	mStarted = mPaused = false;
 	mStarted = mPausedTicks = 0;
 }
+#endif //RENDER_ENABLE_FPS_CAP
 
 /*
  * LTexture
@@ -208,26 +210,23 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 	SDL_Color textColor = { 255, 255, 255, 255 };
 
-	render::renderLines screenStats("Mandelbrot Fractal v0.2", b->renderer, textColor);
-
 #if defined(RENDER_ENABLE_FPS_CAP)
 	b->fpsTimer.start();
 	uint32_t countedFrames = 0;
 #endif //RENDER_ENABLE_FPS_CAP
 
 	// Primary frame texture
-	SDL_Texture* frameTexture = SDL_CreateTexture
-	(
-		renderer,
+	SDL_Texture* frameTexture = SDL_CreateTexture(renderer,
 		SDL_PIXELFORMAT_ARGB8888,
 		SDL_TEXTUREACCESS_STREAMING,
-		(uint32_t)framePixelLength, (uint32_t)framePixelHeight
-	);
+		(uint32_t)framePixelLength, (uint32_t)framePixelHeight);
 
 	/*
 	 * Primary rendering loop
 	 */
 	while (b->doRender) {
+		render::renderLines screenStats("Mandelbrot Fractal v0.2", b->renderer, textColor);
+
 #if defined(RENDER_ENABLE_FPS_CAP)
 		float avgFPS = countedFrames / (b->fpsTimer.getTicks() / 1000.f);
 		if (avgFPS > 2000000)
@@ -324,18 +323,16 @@ error_t sdlBase::render_loop(sdlBase* b)
 		if (refreshBuffer) {
 			unsigned char* lockedPixels = nullptr;
 			int pitch = 0;
-			SDL_LockTexture
-			(
-				frameTexture,
+			SDL_LockTexture(frameTexture,
 				NULL,
 				reinterpret_cast<void**>(&lockedPixels),
-				&pitch
-			);
+				&pitch);
 			std::memcpy(lockedPixels, frameBuffer, frameTotalPixels * sizeof(rgbaPixel));
 			SDL_UnlockTexture(frameTexture);
 			
 			refreshBuffer = false;
-		}
+		} 
+		
 		/*
 		else {
 			SDL_UpdateTexture
@@ -347,6 +344,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 			);
 		}
 		*/
+		
 		frameBufferLock->unlock();
 
 		// Copy frame image into renderer

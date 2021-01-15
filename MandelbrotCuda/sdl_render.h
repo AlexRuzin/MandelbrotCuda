@@ -198,10 +198,10 @@ namespace render
 			frameBuffer(nullptr), framePixelHeight(0), framePixelLength(0), refreshBuffer(false),
 			frameBufferLock(new std::mutex()),
 			cudaStats(cudaRenderingStats{ 56666666555 }),
-			drawCrosshair(false),
 #if defined(RENDER_ENABLE_FPS_CAP)
-			frameCount(0)
+			frameCount(0),
 #endif //RENDER_ENABLE_FPS_CAP
+			drawCrosshair(false)
 		{
 			assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) == 0);
 			assert(TTF_Init() == 0);
@@ -234,30 +234,32 @@ namespace render
 		SDL_Renderer *renderer;
 		SDL_Color color;
 
-		std::vector<std::string> lineArray;
-		std::vector<LTexture *> lineTextures;
+		std::vector<std::string> *lineArray;
+		std::vector<LTexture *> *lineTextures;
 
 	public:
 		renderLines(std::string initString, __inout SDL_Renderer *renderEngine, SDL_Color color) :
 			verticalOffset(30),
 			color(color),
-			renderer(renderEngine)
+			renderer(renderEngine),
+			lineArray(new(std::vector<std::string>)),
+			lineTextures(new(std::vector<LTexture *>))
 		{
 			this->append(initString);
 		}
 
 		void append(std::string input)
 		{
-			lineArray.push_back(input);
-			lineTextures.push_back(new LTexture(renderer));
-			lineTextures.back()->loadFromRenderedText(lineArray.back().c_str(), color);
+			lineArray->push_back(input);
+			lineTextures->push_back(new LTexture(renderer));
+			lineTextures->back()->loadFromRenderedText(lineArray->back().c_str(), color);
 		}
 
 		void append(std::string input, SDL_Color colorOverride)
 		{
-			lineArray.push_back(input);
-			lineTextures.push_back(new LTexture(renderer));
-			lineTextures.back()->loadFromRenderedText(lineArray.back().c_str(), colorOverride);
+			lineArray->push_back(input);
+			lineTextures->push_back(new LTexture(renderer));
+			lineTextures->back()->loadFromRenderedText(lineArray->back().c_str(), colorOverride);
 		}
 
 		void change_color(SDL_Color newColor) { color = newColor; }
@@ -275,7 +277,7 @@ namespace render
 		void render(void)
 		{
 			uint32_t offset = 0;
-			for (std::vector<LTexture *>::iterator i = lineTextures.begin(); i != lineTextures.end(); ++i) {
+			for (std::vector<LTexture *>::iterator i = lineTextures->begin(); i != lineTextures->end(); ++i) {
 				(*i)->render(0, offset);
 				offset += verticalOffset;
 			}
@@ -283,8 +285,8 @@ namespace render
 
 		void clear(void) 
 		{
-			lineArray.clear();
-			lineTextures.clear();
+			delete(lineArray);
+			delete(lineTextures);
 		}
 	};
 }
