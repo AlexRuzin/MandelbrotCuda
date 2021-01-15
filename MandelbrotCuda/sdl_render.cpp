@@ -247,6 +247,11 @@ error_t sdlBase::render_loop(sdlBase* b)
 			to_string_with_precision(b->cudaStats.scaleA / ((double)b->framePixelLength / b->cudaStats.scaleB), 32));
 #endif //DISPLAY_KERNEL_PARAMETERS
 
+		SDL_GetMouseState(&b->mouseX, &b->mouseY);
+#if defined(DISPLAY_MOUSE_LOCATION)
+		SCREEN_STATS("MouseXY: (" + std::to_string(b->mouseX) + "," + std::to_string(b->mouseY) + ")");
+#endif //DISPLAY_MOUSE_LOCATION
+
 		SDL_Event sdlEvent;
 		while (SDL_PollEvent(&sdlEvent) != 0) {
 			switch (sdlEvent.type) {
@@ -423,6 +428,9 @@ error_t sdlBase::init_window(void)
 	if (renderer == nullptr) {
 		return -1;
 	}
+
+	// Create mouse location thread
+
 
 	return 0;
 }

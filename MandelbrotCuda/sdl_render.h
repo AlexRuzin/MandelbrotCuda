@@ -35,6 +35,11 @@
  */
 #define DISPLAY_KERNEL_PARAMETERS
 
+/*
+ * Displays the location of the mouse on screen
+ */
+#define DISPLAY_MOUSE_LOCATION
+
 
 #define COLOR_WHITE frame::rgbPixel{ 255, 255, 255 }
 
@@ -148,6 +153,9 @@ namespace render
 		bool drawCrosshair;
 		const uint8_t crosshairColor[3] = CROSSHAIR_COLOR;
 
+		// Mouse cursor position
+		int32_t mouseX, mouseY;
+
 		// Frame counter
 	private:
 #if defined(RENDER_ENABLE_FPS_CAP)
@@ -181,7 +189,6 @@ namespace render
 		{
 			cudaStats = stats;
 		}
-
 
 	public:
 		sdlBase(size_t height, size_t width, std::string windowTitle) :
