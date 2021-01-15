@@ -14,6 +14,7 @@
 #include <thread>
 #include <assert.h>
 
+#include "main.h"
 #include "sdl_render.h"
 #include "controller.h"
 #include "debug.h"
@@ -256,6 +257,10 @@ error_t sdlBase::render_loop(sdlBase* b)
 			case SDL_KEYDOWN:
 				DINFO("Keystroke detected");
 				switch (sdlEvent.key.keysym.sym) {
+
+				/*
+				 * Controls movement of the camera zoom, either forward, reverse, or pause
+				 */
 				case SDLK_1: // Run/resume
 					controllerPtr->set_user_io_state(controller::SET_ZOOM_RESUME);
 					break;
@@ -265,6 +270,13 @@ error_t sdlBase::render_loop(sdlBase* b)
 				case SDLK_3:
 					controllerPtr->set_user_io_state(controller::SET_ZOOM_REVERSE);
 					break;
+
+				// Sets the crosshair
+				case SDLK_c:
+					b->drawCrosshair = !b->drawCrosshair;
+					break;
+
+				// Teriminate application
 				case SDLK_ESCAPE:
 					DINFO("Renderer has received user input quit signal");
 					b->doRender = false;
@@ -334,6 +346,22 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 		// Copy frame image into renderer
 		SDL_RenderCopy(renderer, frameTexture, NULL, NULL);
+
+		// Draw cross hair if configured
+		if (b->drawCrosshair) {
+			SDL_SetRenderDrawColor(b->renderer,
+				b->crosshairColor[0], //r
+				b->crosshairColor[1], //g
+				b->crosshairColor[2], //b
+				SDL_ALPHA_OPAQUE);
+			SDL_Point points[4] = {
+				{ 0, RENDER_WINDOW_HEIGHT / 2 },
+				{ RENDER_WINDOW_LENGTH, RENDER_WINDOW_HEIGHT / 2 },
+				{ RENDER_WINDOW_LENGTH / 2, 0 },
+				{ RENDER_WINDOW_LENGTH / 2, RENDER_WINDOW_HEIGHT }
+			};
+			SDL_RenderDrawLines(b->renderer, points, 4);
+		}
 
 		// Render on-screen stats
 		screenStats.render();

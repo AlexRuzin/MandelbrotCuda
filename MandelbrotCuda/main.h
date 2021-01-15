@@ -49,4 +49,7 @@
 // Loop delay for cuda_render_thread (controller auto-render loop) -- in milliseconds
 #define CONTROLLER_LOOP_WAIT		1
 
+// Cross hair color code (rgba)
+#define CROSSHAIR_COLOR				{ 162, 243, 11 }
+
 //EOF

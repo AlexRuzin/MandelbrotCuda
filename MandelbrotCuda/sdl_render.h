@@ -144,6 +144,10 @@ namespace render
 		// Counter for the CUDA rendering
 		cudaRenderingStats cudaStats;
 
+		// Draw cross hairs
+		bool drawCrosshair;
+		const uint8_t crosshairColor[3] = CROSSHAIR_COLOR;
+
 		// Frame counter
 	private:
 #if defined(RENDER_ENABLE_FPS_CAP)
@@ -183,10 +187,11 @@ namespace render
 		sdlBase(size_t height, size_t width, std::string windowTitle) :
 			windowHeight(height), windowWidth(width), windowTitle(windowTitle),
 			window(nullptr), renderer(nullptr),
-			doRender(false), renderThread(nullptr), 		
+			doRender(false), renderThread(nullptr),
 			frameBuffer(nullptr), framePixelHeight(0), framePixelLength(0), refreshBuffer(false),
 			frameBufferLock(new std::mutex()),
 			cudaStats(cudaRenderingStats{ 56666666555 }),
+			drawCrosshair(false),
 #if defined(RENDER_ENABLE_FPS_CAP)
 			frameCount(0)
 #endif //RENDER_ENABLE_FPS_CAP
