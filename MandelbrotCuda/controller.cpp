@@ -45,6 +45,9 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 			break; // Perform no zoom
 		case SET_ZOOM_REVERSE:
 			newSCALEA = 0.5 * kernel->getScaleA() * std::exp(-2.5 * lastSCALEA);
+			if (newSCALEA >= MAX_DELTA_SCALE_A) {
+				newSCALEA = 0.0;
+			}
 			break;
 		case SET_ZOOM_RESUME:
 			newSCALEA = -0.5 * kernel->getScaleA() * std::exp(-2.5 * lastSCALEA);
@@ -55,14 +58,21 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 		kernel->setScaleB(kernel->getScaleB());
 		lastSCALEA -= newSCALEA;
 
-		// Manual parameters defined in main.h
-		kernel->setOffsetX(kernel->getOffsetX() + DELTA_OFFSETX);
-		kernel->setOffsetY(kernel->getOffsetY() + DELTA_OFFSETY);
+		// Check for mouse override
+		controller->mouseLock.lock();
+		if (controller->mouseX + controller->mouseY > 0.0f) {
+			kernel->setOffsetX(kernel->getOffsetX() + controller->mouseX);
+			kernel->setOffsetY(kernel->getOffsetY() + controller->mouseY);
+			controller->mouseX = controller->mouseY = 0.0f;
+		}
 
 		error_t err = kernel->generate_mandelbrot();
 		if (err != 0) {
 			DERROR("Error in generating CUDA kernel: " + std::to_string(err));
 		}
+
+		// Release mouse lock
+		controller->mouseLock.unlock();
 
 		rgbaPixel *pixelBuffer = kernel->get_pixel_buffer();
 		assert(pixelBuffer != nullptr);
@@ -84,6 +94,25 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 #endif //MEASURE_CUDA_EXECUTION_TIME
 	}
 	DINFO("Terminating CUDA thread");
+}
+
+// Mouse LEFT click control to offset fractal
+void loopTimer::set_mouse_button_offset(int32_t inMouseX, int32_t inMouseY)
+{
+	assert(inMouseX <= RENDER_WINDOW_LENGTH && inMouseY <= RENDER_WINDOW_HEIGHT);
+
+	mouseLock.lock();
+
+	if (inMouseX > 0.0f) {
+		cudaKernel->setOffsetX((double)inMouseX / (double)RENDER_WINDOW_LENGTH) * cudaKernel->getScaleA());
+	}
+
+	if (inMouseY > 0.0f) {
+		mouseY = ((double)inMouseY / (double)RENDER_WINDOW_HEIGHT) * cudaKernel->getScaleA();
+	}
+
+	mouseLock.unlock();
+	return;
 }
 
 void loopTimer::frame_render_thread(loopTimer *controller)

@@ -6,6 +6,7 @@
 #include <thread>
 #include <string>
 #include <chrono>
+#include <mutex>
 #include <assert.h>
 
 #include "types.h"
@@ -45,6 +46,11 @@ namespace controller {
 		// Inputs 
 		const double origOffsetX, origOffsetY;
 		const double origScaleA, origScaleB;
+
+		// Inputs from SDL2, X,Y position of the mouse
+		//  Will be used for changing the offset of the fractal
+		double mouseX, mouseY;
+		std::mutex mouseLock;
 
 		// Total size of the pixelBuffer (in bytes)
 		const size_t pixelBufferRawSize;
@@ -103,6 +109,7 @@ namespace controller {
 			cudaKernel(nullptr), cudaThread(nullptr),
 			threadStateCuda(THREAD_STATE_TERMINATED),
 			origScaleA(scaleA), origScaleB(scaleB),
+			mouseX(0), mouseY(0),
 			user_io_state(SET_ZOOM_RESUME)
 		{
 
@@ -140,6 +147,12 @@ namespace controller {
 		 *  This will pause automatic zoom of the fractal object through input by SDL2
 		 */
 		void set_user_io_state(USER_IO_STATE state);
+
+		/* 
+		 * Left button click will move the object to a new offset relative
+		 *  to the current postion
+		 */
+		void set_mouse_button_offset(int32_t mouseX, int32_t mouseY);
 	};
 }
 

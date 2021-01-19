@@ -31,6 +31,7 @@
 // Max CUDA iteratations of mandelbrot
 #define CUDA_MANDELBROT_INTERATIONS 255
 
+// Initial fractal offset (in complex plane)
 #define FRACTAL_OFFSET_X			-1.41645612  // -0.6
 #define FRACTAL_OFFSET_Y			0.0   // 0.0
 	
@@ -43,13 +44,14 @@
 // Scale and position delta
 #define DELTA_SCALEA				0.001
 #define DELTA_SCALEB				0.000
-#define DELTA_OFFSETX				-0.0
-#define DELTA_OFFSETY				-0.0
 
 // Loop delay for cuda_render_thread (controller auto-render loop) -- in milliseconds
-#define CONTROLLER_LOOP_WAIT		1
+#define CONTROLLER_LOOP_WAIT		5
 
 // Cross hair color code (rgba)
 #define CROSSHAIR_COLOR				{ 162, 243, 11 }
+
+// Do not exceed this Delta Scale A
+#define MAX_DELTA_SCALE_A			0.1
 
 //EOF

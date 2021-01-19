@@ -244,11 +244,15 @@ error_t sdlBase::render_loop(sdlBase* b)
 		SCREEN_STATS("SCALE Alpha: " + to_string_with_precision(b->cudaStats.scaleA, 32));
 		SCREEN_STATS("SCALE Delta: " +
 			to_string_with_precision(b->cudaStats.scaleA / ((double)b->framePixelLength / b->cudaStats.scaleB), 32));
+		SCREEN_STATS("(offset) C.x: " + to_string_with_precision(b->cudaStats.offsetX));
+		SCREEN_STATS("(offset) C.y: " + to_string_with_precision(b->cudaStats.offsetY));
 #endif //DISPLAY_KERNEL_PARAMETERS
 
 		SDL_GetMouseState(&b->mouseX, &b->mouseY);
 #if defined(DISPLAY_MOUSE_LOCATION)
-		SCREEN_STATS("MouseXY: (" + std::to_string(b->mouseX) + "," + std::to_string(b->mouseY) + ")");
+		SCREEN_STATS("MouseXY: (" + std::to_string(b->mouseX) + "," + std::to_string(b->mouseY) + ") => " + 
+			"(" + to_string_with_precision((double)b->mouseX / (double)RENDER_WINDOW_LENGTH) + "," + 
+			to_string_with_precision((double)b->mouseY / (double)RENDER_WINDOW_HEIGHT) + ")");
 #endif //DISPLAY_MOUSE_LOCATION
 
 		SDL_Event sdlEvent;
@@ -287,6 +291,16 @@ error_t sdlBase::render_loop(sdlBase* b)
 					std::exit(0);
 				}
 				break;
+
+			/* 
+			 * Mouse event handling
+			 */
+			case SDL_MOUSEBUTTONDOWN:
+				if (sdlEvent.button.button == SDL_BUTTON_LEFT) {
+					controllerPtr->set_mouse_button_offset(this->mouseX, this->mouseY);
+				}
+				break;
+
 			case SDL_WINDOWEVENT:
 				switch (sdlEvent.window.event) {
 				case SDL_WINDOWEVENT_CLOSE:
