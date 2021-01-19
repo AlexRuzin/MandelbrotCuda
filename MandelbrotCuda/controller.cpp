@@ -1,5 +1,7 @@
 #include <Windows.h>
 
+#include <math.h>
+
 #include "controller.h"
 
 #include "main.h"
@@ -44,13 +46,13 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 		case SET_ZOOM_PAUSE:
 			break; // Perform no zoom
 		case SET_ZOOM_REVERSE:
-			newSCALEA = 0.5 * kernel->getScaleA() * std::exp(-2.5 * lastSCALEA);
+			newSCALEA = ZOOM_ALPHA * kernel->getScaleA() * std::exp(-ZOOM_BETA * lastSCALEA);
 			if (newSCALEA >= MAX_DELTA_SCALE_A) {
 				newSCALEA = 0.0;
 			}
 			break;
 		case SET_ZOOM_RESUME:
-			newSCALEA = -0.5 * kernel->getScaleA() * std::exp(-2.5 * lastSCALEA);
+			newSCALEA = -ZOOM_ALPHA * kernel->getScaleA() * std::exp(-ZOOM_BETA * lastSCALEA);
 		}
 
 		// Sec scaling
@@ -60,10 +62,10 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 
 		// Check for mouse override
 		controller->mouseLock.lock();
-		if (controller->mouseX + controller->mouseY > 0.0f) {
-			kernel->setOffsetX(kernel->getOffsetX() + controller->mouseX);
-			kernel->setOffsetY(kernel->getOffsetY() + controller->mouseY);
-			controller->mouseX = controller->mouseY = 0.0f;
+		if (controller->setMouseState) {
+			kernel->setOffsetX(kernel->getOffsetX() + (controller->mouseX * kernel->getScaleA()));
+			kernel->setOffsetY(kernel->getOffsetY() + (controller->mouseY * kernel->getScaleA()));
+			controller->setMouseState = false;
 		}
 
 		error_t err = kernel->generate_mandelbrot();
@@ -97,20 +99,26 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 }
 
 // Mouse LEFT click control to offset fractal
-void loopTimer::set_mouse_button_offset(int32_t inMouseX, int32_t inMouseY)
+void loopTimer::set_mouse_button_offset(uint32_t inMouseX, uint32_t inMouseY)
 {
 	assert(inMouseX <= RENDER_WINDOW_LENGTH && inMouseY <= RENDER_WINDOW_HEIGHT);
+
+	this->inMouseX = inMouseX;
+	this->inMouseY = inMouseY;
+	// SDL2 starts at position (0,0), and our complex scale works from
+	//  (-inf,inf), so we need to convert this type
 
 	mouseLock.lock();
 
 	if (inMouseX > 0.0f) {
-		cudaKernel->setOffsetX((double)inMouseX / (double)RENDER_WINDOW_LENGTH) * cudaKernel->getScaleA());
+		mouseX = (double)inMouseX * (2.0 / (double)RENDER_WINDOW_LENGTH) - 1.0;
 	}
 
 	if (inMouseY > 0.0f) {
-		mouseY = ((double)inMouseY / (double)RENDER_WINDOW_HEIGHT) * cudaKernel->getScaleA();
+		mouseY = (double)inMouseY * (2.0 / (double)RENDER_WINDOW_HEIGHT) - 1.0;
 	}
 
+	this->setMouseState = true;
 	mouseLock.unlock();
 	return;
 }

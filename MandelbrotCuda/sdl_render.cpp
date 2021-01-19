@@ -244,15 +244,17 @@ error_t sdlBase::render_loop(sdlBase* b)
 		SCREEN_STATS("SCALE Alpha: " + to_string_with_precision(b->cudaStats.scaleA, 32));
 		SCREEN_STATS("SCALE Delta: " +
 			to_string_with_precision(b->cudaStats.scaleA / ((double)b->framePixelLength / b->cudaStats.scaleB), 32));
-		SCREEN_STATS("(offset) C.x: " + to_string_with_precision(b->cudaStats.offsetX));
-		SCREEN_STATS("(offset) C.y: " + to_string_with_precision(b->cudaStats.offsetY));
+		SCREEN_STATS("(fractal offset) C.x: " + to_string_with_precision(b->cudaStats.offsetX));
+		SCREEN_STATS("(fractal offset) C.y: " + to_string_with_precision(b->cudaStats.offsetY));
 #endif //DISPLAY_KERNEL_PARAMETERS
 
-		SDL_GetMouseState(&b->mouseX, &b->mouseY);
+		SDL_GetMouseState((int *)&b->mouseX, (int *)&b->mouseY);
 #if defined(DISPLAY_MOUSE_LOCATION)
 		SCREEN_STATS("MouseXY: (" + std::to_string(b->mouseX) + "," + std::to_string(b->mouseY) + ") => " + 
 			"(" + to_string_with_precision((double)b->mouseX / (double)RENDER_WINDOW_LENGTH) + "," + 
-			to_string_with_precision((double)b->mouseY / (double)RENDER_WINDOW_HEIGHT) + ")");
+			to_string_with_precision((double)b->mouseY / (double)RENDER_WINDOW_HEIGHT) + ") => (" + 
+			to_string_with_precision((double)controllerPtr->inMouseX * (2.0 / (double)RENDER_WINDOW_LENGTH) - 1.0) + "," +
+			to_string_with_precision((double)controllerPtr->inMouseY * (2.0 / (double)RENDER_WINDOW_HEIGHT) - 1.0) + ")");
 #endif //DISPLAY_MOUSE_LOCATION
 
 		SDL_Event sdlEvent;

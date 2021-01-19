@@ -49,7 +49,12 @@ namespace controller {
 
 		// Inputs from SDL2, X,Y position of the mouse
 		//  Will be used for changing the offset of the fractal
+	public:
+		// The actual SDL2 X,Y position of the mouse (for debugging purposes)
+		double inMouseX, inMouseY;
+	private:
 		double mouseX, mouseY;
+		bool setMouseState;
 		std::mutex mouseLock;
 
 		// Total size of the pixelBuffer (in bytes)
@@ -109,7 +114,7 @@ namespace controller {
 			cudaKernel(nullptr), cudaThread(nullptr),
 			threadStateCuda(THREAD_STATE_TERMINATED),
 			origScaleA(scaleA), origScaleB(scaleB),
-			mouseX(0), mouseY(0),
+			mouseX(0), mouseY(0), inMouseX(0), inMouseY(0), setMouseState(false),
 			user_io_state(SET_ZOOM_RESUME)
 		{
 
@@ -152,7 +157,7 @@ namespace controller {
 		 * Left button click will move the object to a new offset relative
 		 *  to the current postion
 		 */
-		void set_mouse_button_offset(int32_t mouseX, int32_t mouseY);
+		void set_mouse_button_offset(uint32_t mouseX, uint32_t mouseY);
 	};
 }
 

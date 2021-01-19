@@ -34,12 +34,16 @@
 // Initial fractal offset (in complex plane)
 #define FRACTAL_OFFSET_X			-1.41645612  // -0.6
 #define FRACTAL_OFFSET_Y			0.0   // 0.0
-	
+
 #define DEBUG_LOG_FILE				"debug.log"
 
 // CUDA scale parameter
 #define IMAGE_SCALEA				1.1  //1.0
 #define IMAGE_SCALEB				4.0  //4.0
+
+// Zoom scale rate (i.e. how fast zoom in/out)
+#define ZOOM_ALPHA					0.4  //0.5
+#define ZOOM_BETA					2.5 //2.5
 
 // Scale and position delta
 #define DELTA_SCALEA				0.001

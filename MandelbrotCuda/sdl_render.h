@@ -153,8 +153,8 @@ namespace render
 		bool drawCrosshair;
 		const uint8_t crosshairColor[3] = CROSSHAIR_COLOR;
 
-		// Mouse cursor position
-		int32_t mouseX, mouseY;
+		// Mouse cursor position, starting from (0,0) to (inf, inf)
+		uint32_t mouseX, mouseY;
 
 		// Frame counter
 	private:
