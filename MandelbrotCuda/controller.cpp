@@ -99,7 +99,7 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 }
 
 // Dump parameters to a new JSON file
-error_t dump_parameters_json(void)
+error_t loopTimer::dump_parameters_json(void)
 {
 	//todo
 	return 0;

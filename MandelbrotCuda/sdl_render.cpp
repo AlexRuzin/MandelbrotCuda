@@ -284,6 +284,7 @@ error_t sdlBase::render_loop(sdlBase* b)
 #endif //DISPLAY_MOUSE_LOCATION
 
 		SDL_Event sdlEvent;
+		error_t err;
 		while (SDL_PollEvent(&sdlEvent) != 0) {
 			switch (sdlEvent.type) {
 			case SDL_QUIT:
@@ -314,17 +315,19 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 				// Dumps the current controller parameters into JSON
 				case SDLK_d:
-					error_t err = controllerPtr->dump_parameters_json();
+					err = controllerPtr->dump_parameters_json();
 					if (err != 0) {
 						DERROR("Failed to dump parameters to JSON: " + std::to_string(err));
 						std::exit(err);
 					}
+					break;
 
 				// Teriminate application
 				case SDLK_ESCAPE:
 					DINFO("Renderer has received user input quit signal");
 					b->doRender = false;
 					std::exit(0);
+					break;
 				}
 				break;
 
