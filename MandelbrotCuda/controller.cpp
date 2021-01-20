@@ -98,6 +98,13 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 	DINFO("Terminating CUDA thread");
 }
 
+// Dump parameters to a new JSON file
+error_t dump_parameters_json(void)
+{
+	//todo
+	return 0;
+}
+
 // Mouse LEFT click control to offset fractal
 void loopTimer::set_mouse_button_offset(uint32_t inMouseX, uint32_t inMouseY)
 {

@@ -312,6 +312,14 @@ error_t sdlBase::render_loop(sdlBase* b)
 					b->drawCrosshair = !b->drawCrosshair;
 					break;
 
+				// Dumps the current controller parameters into JSON
+				case SDLK_d:
+					error_t err = controllerPtr->dump_parameters_json();
+					if (err != 0) {
+						DERROR("Failed to dump parameters to JSON: " + std::to_string(err));
+						std::exit(err);
+					}
+
 				// Teriminate application
 				case SDLK_ESCAPE:
 					DINFO("Renderer has received user input quit signal");

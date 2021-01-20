@@ -9,6 +9,7 @@
 #include <mutex>
 #include <assert.h>
 
+#include "main.h"
 #include "types.h"
 #include "cudaMandelbrot.h"
 
@@ -147,6 +148,7 @@ namespace controller {
 		error_t init_sdl2_renderer(const std::string windowName);
 
 
+
 		/*
 		 * User I/O
 		 *  This will pause automatic zoom of the fractal object through input by SDL2
@@ -158,6 +160,22 @@ namespace controller {
 		 *  to the current postion
 		 */
 		void set_mouse_button_offset(uint32_t mouseX, uint32_t mouseY);
+
+		/*
+		 * Dump current fractal parameters into JSON format
+		 */
+	private:
+		typedef struct {
+			std::string name;
+			std::string datetime;
+			double scaleAlpha, scaleDelta;
+			double offsetCX, offsetCY;
+		} JSON_PARAMETERS, *PJSON_PARAMETERS;
+
+		const std::string json_file_folder = PARAMETER_FILE_FOLDER;
+
+	public:
+		error_t dump_parameters_json(void);
 	};
 }
 

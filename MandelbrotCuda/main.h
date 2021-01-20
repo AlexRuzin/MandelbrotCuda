@@ -19,6 +19,9 @@
 
 #define PPM_OUTPUT_FILE				"output.ppm"
 
+// Location of the parameter files
+#define PARAMETER_FILE_FOLDER		"C:\\Users\\Stanr\\source\\repos\\MandelbrotCuda\\parameters\\"
+
 // Disables all on-screen counters
 #undef DISABLE_FPS_COUNTERS
 
