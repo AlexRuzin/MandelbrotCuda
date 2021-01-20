@@ -19,14 +19,17 @@
 
 #define PPM_OUTPUT_FILE				"output.ppm"
 
+// Disables all on-screen counters
+#undef DISABLE_FPS_COUNTERS
+
 // Defines
 #define FRAME_BUFFER_HEIGHT			2048 //10000
 #define FRAME_BUFFER_LENGTH			2048 //10000
 #define WINDOW_NAME					"v0.2"
 
 // Defines the size of the render window
-#define RENDER_WINDOW_HEIGHT		1100
-#define RENDER_WINDOW_LENGTH		1400
+#define RENDER_WINDOW_HEIGHT		900 //1100
+#define RENDER_WINDOW_LENGTH		1200 //1400
 
 // Max CUDA iteratations of mandelbrot
 #define CUDA_MANDELBROT_INTERATIONS 255

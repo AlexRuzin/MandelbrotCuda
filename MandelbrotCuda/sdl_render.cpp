@@ -181,6 +181,29 @@ error_t LTexture::loadFromRenderedText(std::string textureText, SDL_Color textCo
 	mWidth = textSurface->w;
 	mHeight = textSurface->h;
 
+	SDL_FreeSurface(textSurface);	
+	
+	return 0;
+}
+
+error_t LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor, uint32_t pixLength)
+{
+	free();
+
+	SDL_Surface *textSurface = TTF_RenderText_Blended_Wrapped(font, textureText.c_str(), textColor, pixLength);
+	if (textSurface == nullptr) {
+		return -1;
+	}
+
+	mTexture = SDL_CreateTextureFromSurface(mainRenderer, textSurface);
+	if (mTexture == NULL)
+	{
+		return -1;
+	}
+
+	mWidth = textSurface->w;
+	mHeight = textSurface->h;
+
 	SDL_FreeSurface(textSurface);
 
 	return 0;
@@ -221,11 +244,14 @@ error_t sdlBase::render_loop(sdlBase* b)
 		SDL_TEXTUREACCESS_STREAMING,
 		(uint32_t)framePixelLength, (uint32_t)framePixelHeight);
 
+#if !defined(DISABLE_FPS_COUNTERS)
+	render::renderLines screenStats("Mandelbrot Fractal v0.2", b->renderer, textColor);
+#endif //DISABLE_FPS_COUNTERS
+
 	/*
 	 * Primary rendering loop
 	 */
 	while (b->doRender) {
-		render::renderLines screenStats("Mandelbrot Fractal v0.2", b->renderer, textColor);
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 		float avgFPS = countedFrames / (b->fpsTimer.getTicks() / 1000.f);
@@ -244,8 +270,8 @@ error_t sdlBase::render_loop(sdlBase* b)
 		SCREEN_STATS("SCALE Alpha: " + to_string_with_precision(b->cudaStats.scaleA, 32));
 		SCREEN_STATS("SCALE Delta: " +
 			to_string_with_precision(b->cudaStats.scaleA / ((double)b->framePixelLength / b->cudaStats.scaleB), 32));
-		SCREEN_STATS("(fractal offset) C.x: " + to_string_with_precision(b->cudaStats.offsetX));
-		SCREEN_STATS("(fractal offset) C.y: " + to_string_with_precision(b->cudaStats.offsetY));
+		SCREEN_STATS("(fractal offset) C.x: " + to_string_with_precision(b->cudaStats.offsetX, 32));
+		SCREEN_STATS("(fractal offset) C.y: " + to_string_with_precision(b->cudaStats.offsetY, 32));
 #endif //DISPLAY_KERNEL_PARAMETERS
 
 		SDL_GetMouseState((int *)&b->mouseX, (int *)&b->mouseY);
@@ -253,8 +279,8 @@ error_t sdlBase::render_loop(sdlBase* b)
 		SCREEN_STATS("MouseXY: (" + std::to_string(b->mouseX) + "," + std::to_string(b->mouseY) + ") => " + 
 			"(" + to_string_with_precision((double)b->mouseX / (double)RENDER_WINDOW_LENGTH) + "," + 
 			to_string_with_precision((double)b->mouseY / (double)RENDER_WINDOW_HEIGHT) + ") => (" + 
-			to_string_with_precision((double)controllerPtr->inMouseX * (2.0 / (double)RENDER_WINDOW_LENGTH) - 1.0) + "," +
-			to_string_with_precision((double)controllerPtr->inMouseY * (2.0 / (double)RENDER_WINDOW_HEIGHT) - 1.0) + ")");
+			to_string_with_precision((double)controllerPtr->inMouseX * (2.0 / (double)RENDER_WINDOW_LENGTH) - 1.0, 32) + "," +
+			to_string_with_precision((double)controllerPtr->inMouseY * (2.0 / (double)RENDER_WINDOW_HEIGHT) - 1.0, 32) + ")");
 #endif //DISPLAY_MOUSE_LOCATION
 
 		SDL_Event sdlEvent;
@@ -383,7 +409,9 @@ error_t sdlBase::render_loop(sdlBase* b)
 		}
 
 		// Render on-screen stats
+#if !defined(DISABLE_FPS_COUNTERS)
 		screenStats.render();
+#endif //DISABLE_FPS_COUNTERS
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 #if defined(RENDER_SHOW_FPS_STRING)
@@ -394,7 +422,9 @@ error_t sdlBase::render_loop(sdlBase* b)
 
 		SDL_RenderPresent(b->renderer);
 
+#if !defined(DISABLE_FPS_COUNTERS)
 		screenStats.clear();
+#endif //DISABLE_FPS_COUNTERS
 
 #if defined(RENDER_ENABLE_FPS_CAP)
 		uint32_t frameTicks = b->capTimer.getTicks();

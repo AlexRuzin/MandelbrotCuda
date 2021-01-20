@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "main.h"
 #include "types.h"
 
 #define FPS_COUNTER_FONT_TYPE		"C:\\Windows\\Fonts\\Arial.ttf"
@@ -18,7 +19,9 @@
 /*
  * Configuration for SDL2 rendering engine
  */
+#if !defined(DISABLE_FPS_COUNTERS)
 #define RENDER_ENABLE_FPS_CAP 
+#endif //DISABLE_FPS_COUNTERS
 #if defined(RENDER_ENABLE_FPS_CAP) 
 #define RENDER_FPS_CAP						60
 #define RENDER_SCREEN_TICKS_PER_FRAME		1000 / RENDER_FPS_CAP
@@ -28,17 +31,23 @@
 /*
  * Renders the CUDA time elapsed stats
  */
+#if !defined(DISABLE_FPS_COUNTERS)
 #define RENDER_CUDA_STATS
+#endif //DISABLE_FPS_COUNTERS
 
 /*
  * Displays kernel parameters
  */
+#if !defined(DISABLE_FPS_COUNTERS)
 #define DISPLAY_KERNEL_PARAMETERS
+#endif //DISABLE_FPS_COUNTERS
 
 /*
  * Displays the location of the mouse on screen
  */
+#if !defined(DISABLE_FPS_COUNTERS)
 #define DISPLAY_MOUSE_LOCATION
+#endif //DISABLE_FPS_COUNTERS
 
 
 #define COLOR_WHITE frame::rgbPixel{ 255, 255, 255 }
@@ -109,7 +118,11 @@ namespace render
 	public:
 		error_t loadFromFile(std::string path);
 
+		// Single line
 		error_t loadFromRenderedText(std::string textureText, SDL_Color textColor);
+
+		// Multiline, and takes size (in pixels) of next line (if using \r\n) delimiter
+		error_t loadFromRenderedText(std::string textureText, SDL_Color textColor, uint32_t pixLength);
 
 		void free(void);
 
@@ -226,6 +239,10 @@ namespace render
 	/*
 	 * Stats class
 	 */
+
+	// Use the optimized version or suffer a memory leak from hell
+#define USE_OPTIMIZED_RENDERLINES
+
 #define SCREEN_STATS(x) screenStats.append((std::string)x)
 	class renderLines {
 	private:
@@ -235,15 +252,20 @@ namespace render
 		SDL_Color color;
 
 		std::vector<std::string> *lineArray;
+
+#if !defined(USE_OPTIMIZED_RENDERLINES)
 		std::vector<LTexture *> *lineTextures;
+#endif //USE_OPTIMIZED_RENDERLINES
 
 	public:
 		renderLines(std::string initString, __inout SDL_Renderer *renderEngine, SDL_Color color) :
-			verticalOffset(30),
+			verticalOffset(1000),
 			color(color),
 			renderer(renderEngine),
-			lineArray(new(std::vector<std::string>)),
-			lineTextures(new(std::vector<LTexture *>))
+#if !defined(USE_OPTIMIZED_RENDERLINES)
+			lineTextures(new(std::vector<LTexture *>)),
+#endif //USE_OPTIMIZED_RENDERLINES
+			lineArray(new(std::vector<std::string>))
 		{
 			this->append(initString);
 		}
@@ -251,15 +273,23 @@ namespace render
 		void append(std::string input)
 		{
 			lineArray->push_back(input);
+
+#if !defined(USE_OPTIMIZED_RENDERLINES)
 			lineTextures->push_back(new LTexture(renderer));
 			lineTextures->back()->loadFromRenderedText(lineArray->back().c_str(), color);
+#endif //USE_OPTIMIZED_RENDERLINES
 		}
 
 		void append(std::string input, SDL_Color colorOverride)
 		{
 			lineArray->push_back(input);
+
+#if !defined(USE_OPTIMIZED_RENDERLINES)
 			lineTextures->push_back(new LTexture(renderer));
 			lineTextures->back()->loadFromRenderedText(lineArray->back().c_str(), colorOverride);
+#else 
+
+#endif //USE_OPTIMIZED_RENDERLINES
 		}
 
 		void change_color(SDL_Color newColor) { color = newColor; }
@@ -276,17 +306,37 @@ namespace render
 
 		void render(void)
 		{
+#if !defined(USE_OPTIMIZED_RENDERLINES)
 			uint32_t offset = 0;
 			for (std::vector<LTexture *>::iterator i = lineTextures->begin(); i != lineTextures->end(); ++i) {
 				(*i)->render(0, offset);
 				offset += verticalOffset;
 			}
+#else //USE_OPTIMIZED_RENDERLINES
+			std::string outputStr;
+			for (std::vector<std::string>::const_iterator i = lineArray->begin(); i != lineArray->end(); ++i) {
+				outputStr += *i + "\n";
+			}
+			
+			LTexture strTexture(renderer);
+			if (verticalOffset != 0) {
+				strTexture.loadFromRenderedText(outputStr.c_str(), color, verticalOffset);
+			}
+			else {
+				strTexture.loadFromRenderedText(outputStr.c_str(), color);
+			}
+			strTexture.render(0, 0);
+#endif //USE_OPTIMIZED_RENDERLINES
 		}
 
 		void clear(void) 
 		{
 			delete(lineArray);
+			lineArray = new std::vector<std::string>();
+
+#if !defined(USE_OPTIMIZED_RENDERLINES)
 			delete(lineTextures);
+#endif //USE_OPTIMIZED_RENDERLINES
 		}
 	};
 }
