@@ -35,72 +35,62 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="CUDA">
+      <UniqueIdentifier>{44439704-e085-4fa1-9038-63ee1c06b425}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Tests\MandelbrotCuda\TextureRenderingTest\TextureRenderingTest.cpp">
+    <ClCompile Include="controller.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MandelbrotCuda\controller.cpp">
+    <ClCompile Include="debug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MandelbrotCuda\debug.cpp">
+    <ClCompile Include="sdl_render.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MandelbrotCuda\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MandelbrotCuda\sdl_render.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MandelbrotCuda\ui.cpp">
+    <ClCompile Include="ui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MandelbrotCuda\controller.h">
+    <ClInclude Include="controller.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MandelbrotCuda\cudaMandelbrot.h">
+    <ClInclude Include="cudaMandelbrot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MandelbrotCuda\debug.h">
+    <ClInclude Include="frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MandelbrotCuda\frame.h">
+    <ClInclude Include="debug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MandelbrotCuda\main.h">
+    <ClInclude Include="ppm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MandelbrotCuda\mandelbrot_cpu.h">
+    <ClInclude Include="sdl_render.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MandelbrotCuda\ppm.h">
+    <ClInclude Include="types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MandelbrotCuda\sdl_render.h">
+    <ClInclude Include="ui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MandelbrotCuda\types.h">
+    <ClInclude Include="mandelbrot_cpu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MandelbrotCuda\ui.h">
+    <ClInclude Include="main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="debug\moc_predefs.h.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="release\moc_predefs.h.cbt">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
-    
-    
-  </ItemGroup>
-  <ItemGroup>
-    <QtRcc Include="MandelbrotCuda\qml.qrc">
-      <Filter>Resource Files</Filter>
-    </QtRcc>
+    <CudaCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="kernel.cu">
+      <Filter>CUDA</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

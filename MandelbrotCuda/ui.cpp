@@ -17,7 +17,7 @@ error_t window::init_window(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QString::fromStdString("qrc:/main.qml")));
+    engine.load(QUrl(QString::fromStdString(windowResourceName)));
     if (engine.rootObjects().isEmpty()) {
         return -1;
     }
