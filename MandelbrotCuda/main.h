@@ -8,6 +8,9 @@
 // Tests the mandelbrot_cpu.h structures using PPM (obsolete)
 #undef TEST_MANDELBROT_CPU_PPM
 
+// Tests the Qt window object by executing ui::window (ui.h)
+#define TEST_QT
+
 // Tests the frame:: class to write data into a file
 #undef TEST_MANDELBROT_CPU_FRAME
 

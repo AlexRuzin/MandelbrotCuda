@@ -8,6 +8,14 @@
 #include "debug.h"
 #endif //DEBUG_LIBRARY_INCLUDED
 
+#include <stdio.h>
+#include <stdint.h>
+#include <vector>
+#include <string>       // std::string
+#include <iostream>     // std::cout
+#include <sstream>
+#include <iomanip>
+
 #include "main.h"
 #include "mandelbrot_cpu.h"
 #include "ppm.h"
@@ -16,14 +24,6 @@
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-
-#include <stdio.h>
-#include <stdint.h>
-#include <vector>
-#include <string>       // std::string
-#include <iostream>     // std::cout
-#include <sstream>
-#include <iomanip>
 
 int WINAPI WinMain(HINSTANCE hinstance,
     HINSTANCE hprevinstance,
@@ -38,8 +38,9 @@ int WINAPI WinMain(HINSTANCE hinstance,
     double testDouble = 0.000000000000000534;
     //OutputDebugStringA(to_string_with_precision(testDouble, 64).c_str());
 
+#if defined(TEST_QT)
 
-
+#endif //TEST_QT
 
 #if defined(TEST_MANDELBROT_CPU_PPM)
     mandelbrotFractalCpu mFrac(34, WINDOW_LENGTH, WINDOW_HEIGHT);
