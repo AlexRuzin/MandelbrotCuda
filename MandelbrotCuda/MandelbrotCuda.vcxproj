@@ -102,9 +102,6 @@
     <ClCompile Include="sdl_render.cpp" />
     <ClCompile Include="ui.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="MainWindow.ui" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 11.1.targets" />
