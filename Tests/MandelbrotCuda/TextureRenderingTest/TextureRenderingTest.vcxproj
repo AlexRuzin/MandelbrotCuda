@@ -24,6 +24,7 @@
     <ProjectGuid>{f0dc776a-b3b1-4da8-9d84-ee676979309a}</ProjectGuid>
     <RootNamespace>TextureRenderingTest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>TextureRendering_TEST</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
