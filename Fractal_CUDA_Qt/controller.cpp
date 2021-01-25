@@ -68,10 +68,12 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 			controller->setMouseState = false;
 		}
 
+		/*
 		error_t err = kernel->generate_mandelbrot();
 		if (err != 0) {
 			DERROR("Error in generating CUDA kernel: " + std::to_string(err));
 		}
+		*/
 
 		// Release mouse lock
 		controller->mouseLock.unlock();
