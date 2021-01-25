@@ -20,7 +20,6 @@
 #include "mandelbrot_cpu.h"
 #include "ppm.h"
 #include "controller.h"
-#include "ui.h"
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
@@ -37,15 +36,6 @@ int WINAPI WinMain(HINSTANCE hinstance,
     std::stringstream testSS(std::stringstream::in | std::stringstream::out);
     double testDouble = 0.000000000000000534;
     //OutputDebugStringA(to_string_with_precision(testDouble, 64).c_str());
-
-#if defined(TEST_QT)
-    ui::window qtGui("qrc:/main.qml");
-    err = qtGui.init_window(0, nullptr);
-    if (err != 0) {
-        DERROR("Error loading Qt frame");
-        std::exit(err);
-    }
-#endif //TEST_QT
 
 #if defined(TEST_MANDELBROT_CPU_PPM)
     mandelbrotFractalCpu mFrac(34, WINDOW_LENGTH, WINDOW_HEIGHT);
