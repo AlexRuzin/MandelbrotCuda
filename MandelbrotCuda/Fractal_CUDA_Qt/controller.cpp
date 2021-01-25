@@ -75,7 +75,7 @@ void loopTimer::cuda_render_thread(loopTimer *controller)
 		}
 		*/
 
-		// Release mouse lock
+		// Release mouse lockre
 		controller->mouseLock.unlock();
 
 		rgbaPixel *pixelBuffer = kernel->get_pixel_buffer();

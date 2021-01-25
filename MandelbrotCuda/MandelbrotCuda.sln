@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MandelbrotCuda_OLD", "Mande
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextureRendering_TEST", "..\Tests\MandelbrotCuda\TextureRenderingTest\TextureRenderingTest.vcxproj", "{F0DC776A-B3B1-4DA8-9D84-EE676979309A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Fractal_CUDA_Qt_TEST_OLD", "..\Fractal_CUDA_Qt\Fractal_CUDA_Qt.vcxproj", "{9C22F0CC-AC51-48B2-B551-5A58802C4CB8}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -29,12 +27,6 @@ Global
 		{F0DC776A-B3B1-4DA8-9D84-EE676979309A}.Release|x64.Build.0 = Release|x64
 		{F0DC776A-B3B1-4DA8-9D84-EE676979309A}.Release|x86.ActiveCfg = Release|Win32
 		{F0DC776A-B3B1-4DA8-9D84-EE676979309A}.Release|x86.Build.0 = Release|Win32
-		{9C22F0CC-AC51-48B2-B551-5A58802C4CB8}.Debug|x64.ActiveCfg = Debug|x64
-		{9C22F0CC-AC51-48B2-B551-5A58802C4CB8}.Debug|x64.Build.0 = Debug|x64
-		{9C22F0CC-AC51-48B2-B551-5A58802C4CB8}.Debug|x86.ActiveCfg = Debug|x64
-		{9C22F0CC-AC51-48B2-B551-5A58802C4CB8}.Release|x64.ActiveCfg = Release|x64
-		{9C22F0CC-AC51-48B2-B551-5A58802C4CB8}.Release|x64.Build.0 = Release|x64
-		{9C22F0CC-AC51-48B2-B551-5A58802C4CB8}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
