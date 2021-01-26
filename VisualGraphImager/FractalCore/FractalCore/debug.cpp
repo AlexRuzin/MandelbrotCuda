@@ -1,6 +1,10 @@
 #include "debug.h"
 
+// Suppress CRT obsolete errors FIXME
+#pragma warning(disable : 4996)
+
 #include <string>
+#include <ctime>
 
 #if defined(USE_COMPLEX_DEBUGGING)
 using namespace debug;
@@ -22,7 +26,7 @@ void debugOut::debugPrint(debugLevel level, const std::string s)
 		char buffer[80] = { 0 };
 
 		std::time(&rawtime);
-		timeinfo = std::localtime(&rawtime);
+		timeinfo = std::localtime_s(&rawtime);
 
 		std::strftime(buffer, sizeof(buffer), "%d-%m-%Y %H:%M:%S", timeinfo);
 		std::string str(buffer);

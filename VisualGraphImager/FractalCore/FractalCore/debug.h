@@ -1,5 +1,8 @@
 #pragma once
 
+// Suppress CRT obsolete errors FIXME
+#pragma warning(disable : 4996)
+
 #if defined(_WIN32)
 #include <Windows.h>
 #endif //__WIN32
