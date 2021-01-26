@@ -8,9 +8,12 @@
 #include <stdint.h>
 
 #include "main.h"
+#include "config.h"
 
 uint32_t main(uint32_t argc, char *argv[])
 {
+
+
 
 	return 0;
 }
