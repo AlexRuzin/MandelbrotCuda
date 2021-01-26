@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <assert.h>
 #include <stdint.h>
 #include <INIReader.h>
 
@@ -9,57 +10,80 @@
 
 namespace config {
 	typedef struct iniContents {
-		struct cudaController {
-			// Size of the CUDA frame buffer
-			const uint32_t		FRAME_BUFFER_HEIGHT;
-			const uint32_t		FRAME_BUFFER_LENGTH;
+		typedef struct {
+			/*
+			 * CUDA configuration
+			 */
 
-			// CUDA initial scale parameters
-			const double		IMAGE_SCALEA;
-			const double		IMAGE_SCALEB;
+			 // Size of the CUDA frame buffer
+			uint32_t	FRAME_BUFFER_HEIGHT;
+			uint32_t	FRAME_BUFFER_LENGTH;
 
-			// Zoom scale rate
-			const double		ZOOM_ALPHA;
-			const double		ZOOM_BETA;
-
-			// Scale and position delta
-			const double		DELTA_SCALEA;
-			const double		DELTA_SCALEB;
-
-			// Do not exceed this Delta Scale A (i.e cause a div by 0 on scale zoom out)
-			const double		MAX_DELTA_SCALE_A;
+			// Initial offset of C for the fractal object
+			double		INITIAL_OFFSET_X;
+			double		INITIAL_OFFSET_Y;
 
 			// milliseconds
-			const uint32_t		CONTROLLER_LOOP_WAIT;
-		};
+			uint32_t	CONTROLLER_LOOP_WAIT;
 
-		struct sdl2 {
-			// SDL2 window dimensions
-			const uint32_t		SDL2_WINDOW_HEIGHT;
-			const uint32_t		SDL2_WINDOW_LENGTH;
+			// Total number of iterations for the fractal generator
+			uint32_t	MAX_FRACTAL_ITERATIONS;
 
-			const std::string	SDL2_WINDOW_NAME;
+			// CUDA initial scale parameters
+			double		IMAGE_SCALEA;
+			double		IMAGE_SCALEB;
 
-			const uint8_t		CROSSHAIR_COLOR[3];
-		};
+			// Zoom scale rate
+			double		ZOOM_ALPHA;
+			double		ZOOM_BETA;
 
-		const std::string		DEBUG_LOG_FILE;
+			// Scale and position delta (this is probably obsolete)
+			double		DELTA_SCALEA;
+			double		DELTA_SCALEB;
+
+			// Do not exceed this Delta Scale A (i.e cause a div by 0 on scale zoom out)
+			double		MAX_DELTA_SCALE_A;
+		} CUDA, *PCUDA;
+		CUDA cuda;
+		
+		/*
+		 * SDL2 configuration
+		 */
+
+		// SDL2 window dimensions
+		typedef struct {
+			uint32_t	SDL2_WINDOW_HEIGHT;
+			uint32_t	SDL2_WINDOW_LENGTH;
+
+			std::string	SDL2_WINDOW_NAME;
+
+			uint8_t		CROSSHAIR_COLOR[3];
+		} SDL2, *PSDL2;
+		SDL2 sdl2;
+
+		std::string	DEBUG_LOG_FILE;
+
 	} INI_CONTENTS, *PINI_CONTENTS;
 
+#define SET_PARSER
 	class iniParser {
 	private:
 		const std::string fileName;
 
-		INI_CONTENTS *data;
+		const std::string cuda_section_name;
+		const std::string sdl2_section_name;
+
+		INI_CONTENTS iniData;
 
 		INIReader *reader;
 
 	public:
 		iniParser(std::string fileName) :
-			data(nullptr),
-			fileName(fileName)
+			fileName(fileName),
+			cuda_section_name("CUDA_Config"),
+			sdl2_section_name("SDL2_Config")
 		{
-
+			iniData = { 0 };
 		}
 
 		~iniParser(void)
@@ -69,7 +93,15 @@ namespace config {
 			}
 		}
 
-		error_t load_config_file(void);
+		// Parse the file
+		error_t parse_config_file(void);
+
+		// Return the config file
+		const INI_CONTENTS *get_config(void) const
+		{
+			return const_cast<const INI_CONTENTS *>(&iniData);
+		}
+
 
 		static bool check_if_file_exists(std::string filename);
 	};
