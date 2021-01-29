@@ -73,8 +73,10 @@ namespace config {
 		const std::string cuda_section_name;
 		const std::string sdl2_section_name;
 
+	public:
 		INI_CONTENTS iniData;
 
+	private:
 		INIReader *reader;
 
 	public:

@@ -143,11 +143,13 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="debug.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sdl_render.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="sdl_render.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <ItemGroup>
